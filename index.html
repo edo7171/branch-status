@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול סטטוס סניפים | אלגד</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F5F4F0;--surface:#fff;--surface2:#EFEFEB;--border:#E0DED8;
+  --text:#1A1916;--text2:#6B6860;--text3:#A8A69F;--accent:#1A1916;
+  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:210px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;position:fixed;right:0;top:0;bottom:0;z-index:50}
+.sidebar-logo{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
+.sidebar-logo .brand{font-size:18px;font-weight:700}
+.sidebar-logo .sub{font-size:11px;color:var(--text3);margin-top:2px}
+.nav{padding:10px 8px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;transition:all .13s;margin-bottom:2px;border:none;background:none;width:100%;text-align:right;font-family:inherit}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.sidebar-footer{padding:10px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+.main{margin-right:210px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.content{padding:20px 24px;flex:1}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .12s;font-family:inherit}
+.btn:hover{background:var(--surface2)}
+.btn svg{width:13px;height:13px}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{opacity:.85;background:var(--accent)}
+.btn-success{background:#1B5E20;color:#fff;border-color:#1B5E20}
+.btn-success:hover{opacity:.85}
+.btn-danger{background:#fff;color:#b71c1c;border-color:#ef9a9a}
+.btn-danger:hover{background:#ffebee}
+.btn-wa{background:#25D366;color:#fff;border-color:#25D366}
+.btn-wa:hover{background:#1ebe5a}
+.btn-sm{padding:4px 9px;font-size:11px}
+.summary-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.summary-card .num{font-size:24px;font-weight:700;line-height:1;margin-bottom:3px}
+.summary-card .lbl{font-size:11px;color:var(--text2)}
+.view-toggle{display:flex;gap:4px;background:var(--surface2);border-radius:8px;padding:3px}
+.vbtn{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--text2);font-family:inherit;display:flex;align-items:center;gap:5px}
+.vbtn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.vbtn svg{width:13px;height:13px}
+.warroom-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border)}
+.warroom-table{border-collapse:collapse;min-width:100%;font-size:13px;background:#fff}
+.warroom-table th{padding:12px 16px;font-weight:700;font-size:13px;text-align:center;border:1px solid rgba(0,0,0,.12);white-space:nowrap;position:sticky;top:0;z-index:5}
+.warroom-table td{padding:10px 14px;border:1px solid #ddd;text-align:center;vertical-align:middle;min-width:160px;font-size:13px}
+.warroom-table tbody tr:nth-child(even) td{background:#f9f9f9}
+.warroom-table tbody tr:nth-child(odd) td{background:#fff}
+.wt-note{font-size:11px;color:#555;margin-top:3px;font-weight:400}
+.wt-elapsed{font-size:10px;color:#888}
+.branch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.branch-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.bc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.bc-name{font-size:14px;font-weight:600}
+.bc-elapsed{font-size:11px;color:var(--text3);margin-top:2px}
+.bc-note{font-size:12px;color:var(--text2);background:var(--surface2);border-radius:6px;padding:5px 8px;margin-bottom:10px;border-right:3px solid var(--border)}
+.bc-actions{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.bc-timeline{border-top:1px solid var(--border);padding-top:8px;display:flex;flex-direction:column;gap:3px}
+.tl-row{display:flex;align-items:baseline;gap:6px;font-size:11px;color:var(--text2)}
+.tl-time{color:var(--text3);min-width:55px;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state svg{width:42px;height:42px;margin-bottom:14px;opacity:.25;display:block;margin-left:auto;margin-right:auto}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,14,12,.5);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.15);animation:slideUp .18s ease}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:18px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--surface);color:var(--text)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:60px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.status-picker{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.status-opt{padding:9px 11px;border:2px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px;transition:all .12s;background:none;font-family:inherit;color:var(--text)}
+.status-opt:hover{border-color:#999}
+.status-opt.selected{border-color:var(--accent);background:var(--surface2)}
+.status-opt .dot{width:10px;height:10px;border-radius:50%}
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.settings-section h3{font-size:14px;font-weight:600;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.list-item:last-child{border-bottom:none}
+.add-inline{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.add-inline input{padding:7px 11px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)}
+.st-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.st-row:last-child{border-bottom:none}
+.st-color-swatch{width:28px;height:28px;border-radius:6px;border:1px solid rgba(0,0,0,.1);flex-shrink:0;cursor:pointer}
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.rtable{width:100%;border-collapse:collapse;font-size:13px}
+.rtable th{text-align:right;padding:9px 13px;border-bottom:2px solid var(--border);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text2);white-space:nowrap}
+.rtable td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.rtable tbody tr:hover{background:var(--surface2)}
+.rtable tbody tr:last-child td{border-bottom:none}
+.report-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.report-filters select,.report-filters input{padding:7px 11px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)}
+.wa-preview{background:#E8FDD8;border-radius:10px;padding:11px 13px;font-size:13px;color:#111;white-space:pre-wrap;margin-bottom:10px;border:1px solid #C5EDA9;direction:rtl}
+input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-radius:6px;padding:2px;cursor:pointer;background:none}
+.hidden{display:none!important}
+.mt12{margin-top:12px}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)}
+.flash{animation:flash .4s ease}
+@keyframes flash{0%,100%{background:var(--surface)}50%{background:#fffbe6}}
+
+/* Loading overlay */
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px}
+.loading-screen.done{display:none}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text2)}
+
+/* Realtime indicator */
+.rt-dot{width:8px;height:8px;border-radius:50%;background:#43A047;display:inline-block;margin-left:6px;animation:pulse-dot 2s ease infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text">מתחבר ל-Firebase...</div>
+</div>
+
+<div class="app">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">אלגד</div>
+    <div class="sub">ניהול סטטוס סניפים</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      לוח ראשי
+    </button>
+    <button class="nav-item" onclick="showPage('reports')" id="nav-reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      דוחות
+    </button>
+    <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      הגדרות
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="rt-dot"></span>Firebase Live · גרסה 2.0
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div id="page-dashboard">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">לוח ניהול סניפים</div>
+      <div class="topbar-sub" id="dash-sub">מתחבר...</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="view-toggle">
+        <button class="vbtn active" id="vbtn-table" onclick="setView('table')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+          טבלה
+        </button>
+        <button class="vbtn" id="vbtn-cards" onclick="setView('cards')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="20" height="16" rx="2"/><line x1="1" y1="10" x2="21" y2="10"/></svg>
+          כרטיסיות
+        </button>
+      </div>
+      <button class="btn btn-wa" onclick="openWAModal()">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.122 1.524 5.858L0 24l6.335-1.524A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 0 1-5.003-1.368l-.36-.213-3.728.896.928-3.634-.235-.373A9.77 9.77 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+        WhatsApp
+      </button>
+      <button class="btn btn-primary" onclick="openAddBranchModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        הוסף סניף
+      </button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="summary-strip" id="summary-strip"></div>
+    <div id="view-table"><div class="warroom-wrap"><table class="warroom-table"><thead id="warroom-head"></thead><tbody id="warroom-body"></tbody></table></div></div>
+    <div id="view-cards" class="hidden"><div class="branch-grid" id="branch-grid"></div></div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div id="page-reports" class="hidden">
+  <div class="topbar">
+    <div><div class="topbar-title">דוחות</div><div class="topbar-sub">מעקב זמנים לפי סניף וסטטוס</div></div>
+    <button class="btn" onclick="exportCSV()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </button>
+  </div>
+  <div class="content">
+    <div class="report-filters">
+      <select id="filter-branch" onchange="renderReports()"><option value="">כל הסניפים</option></select>
+      <select id="filter-status" onchange="renderReports()"><option value="">כל הסטטוסים</option></select>
+      <input type="date" id="filter-from" onchange="renderReports()">
+      <input type="date" id="filter-to" onchange="renderReports()">
+      <button class="btn btn-sm" onclick="clearFilters()">נקה</button>
+    </div>
+    <div class="summary-strip" id="report-summary"></div>
+    <div class="tbl-wrap mt12">
+      <table class="rtable"><thead><tr><th>סניף</th><th>סטטוס</th><th>הערה</th><th>תחילה</th><th>סיום</th><th>משך</th></tr></thead>
+      <tbody id="report-body"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="page-settings" class="hidden">
+  <div class="topbar"><div><div class="topbar-title">הגדרות</div><div class="topbar-sub">סניפים, סטטוסים, WhatsApp</div></div></div>
+  <div class="content">
+    <div class="settings-section">
+      <h3>סניפים</h3>
+      <div id="settings-branches-list"></div>
+      <div class="add-inline mt12">
+        <input type="text" id="new-branch-name" placeholder="שם סניף חדש..." style="flex:1" onkeydown="if(event.key==='Enter')addBranchDef()">
+        <button class="btn btn-primary" onclick="addBranchDef()">הוסף</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>סטטוסים</h3>
+      <div id="settings-statuses-list"></div>
+      <div class="add-inline mt12">
+        <input type="color" id="new-st-color" value="#E53935">
+        <input type="text" id="new-st-label" placeholder="שם סטטוס..." style="flex:1" onkeydown="if(event.key==='Enter')addStatusDef()">
+        <button class="btn btn-primary" onclick="addStatusDef()">הוסף</button>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>WhatsApp</h3>
+      <div class="field"><label>מספרים לשליחה (מופרדים בפסיק)</label><input type="text" id="wa-numbers" placeholder="0521234567, 0529876543"></div>
+      <div class="field"><label>חתימה</label><input type="text" id="wa-sender" placeholder="מוקד אלגד"></div>
+      <button class="btn btn-primary" onclick="saveWASettings()">שמור</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- MODAL: Add Branch -->
+<div class="overlay" id="modal-add-branch">
+<div class="modal">
+  <h2>הוסף סניף לא בשגרה</h2>
+  <div class="field"><label>סניף</label><select id="ab-branch"><option value="">בחר סניף...</option></select></div>
+  <div class="field"><label>סטטוס</label><div class="status-picker" id="ab-status-picker"></div></div>
+  <div class="field"><label>הערה</label><textarea id="ab-note" placeholder="סיבה, פרטים..."></textarea></div>
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal('modal-add-branch')">ביטול</button>
+    <button class="btn btn-primary" onclick="confirmAddBranch()">הוסף</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL: Update Status -->
+<div class="overlay" id="modal-update">
+<div class="modal">
+  <h2 id="update-title">עדכן סטטוס</h2>
+  <div class="field"><label>סטטוס</label><div class="status-picker" id="up-status-picker"></div></div>
+  <div class="field"><label>הערה</label><textarea id="update-note" placeholder="עדכון..."></textarea></div>
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal('modal-update')">ביטול</button>
+    <button class="btn btn-primary" onclick="confirmUpdate()">עדכן</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL: Restore -->
+<div class="overlay" id="modal-restore">
+<div class="modal">
+  <h2 id="restore-title">חזרה לשגרה</h2>
+  <p style="color:var(--text2);font-size:13px;margin-bottom:14px">הסניף יוסר מהמסך ויישמר בדוחות.</p>
+  <div class="field"><label>הערת סיכום</label><input type="text" id="restore-note" placeholder="הכל חזר לשגרה"></div>
+  <div class="modal-footer">
+    <button class="btn" onclick="closeModal('modal-restore')">ביטול</button>
+    <button class="btn btn-success" onclick="confirmRestore()">אשר</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL: WhatsApp -->
+<div class="overlay" id="modal-wa">
+<div class="modal" style="width:480px">
+  <h2>שלח עדכון WhatsApp</h2>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="btn" id="wa-tab-text" onclick="setWATab('text')" style="flex:1">📝 הודעת טקסט</button>
+    <button class="btn" id="wa-tab-img" onclick="setWATab('img')" style="flex:1">📸 תמונת טבלה</button>
+  </div>
+  <div id="wa-panel-text">
+    <div class="field"><label>הודעה</label><div class="wa-preview" id="wa-preview-text"></div></div>
+    <div class="field"><label>מספר</label><input type="text" id="wa-target" placeholder="0521234567"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-wa')">ביטול</button>
+      <button class="btn btn-wa" onclick="sendWA()">פתח WhatsApp</button>
+    </div>
+  </div>
+  <div id="wa-panel-img" class="hidden">
+    <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;color:var(--text2);line-height:1.7">
+      <strong>שלבים:</strong><br>1. לחץ "צלם טבלה" — הקובץ יורד<br>2. פתח WhatsApp ← צרף והשלח
+    </div>
+    <div id="wa-img-preview" style="margin-bottom:12px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-wa')">ביטול</button>
+      <button class="btn btn-primary" onclick="captureTable()">📸 צלם טבלה והורד</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {
+  getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+  onSnapshot, getDocs, serverTimestamp, query, orderBy, Timestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDCSXxl8reiSWAVuue9PUPIS9Px2nu5p9g",
+  authDomain: "branch-status.firebaseapp.com",
+  projectId: "branch-status",
+  storageBucket: "branch-status.firebasestorage.app",
+  messagingSenderId: "437287525021",
+  appId: "1:437287525021:web:c344cb7d654b59a3589274"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ─── Collections ───
+const branchesCol  = collection(db, 'branches');
+const statusesCol  = collection(db, 'statuses');
+const activeCol    = collection(db, 'active_events');
+const logsCol      = collection(db, 'status_logs');
+const settingsDoc  = doc(db, 'settings', 'global');
+
+// ─── Local state (synced from Firestore) ───
+window._state = {
+  branches: [], statuses: [], active: [], logs: [],
+  settings: { waNumbers:'', waSender:'מוקד אלגד' }
+};
+
+const DEFAULT_STATUSES = [
+  { label:'סגורים (הכל סגור)',              color:'#E53935', sortOrder:0 },
+  { label:'סגורים חלקית (לציין מה סגור)',   color:'#F5A623', sortOrder:1 },
+  { label:'סניפים עם הודעת עיכובים',         color:'#90CAF9', sortOrder:2 },
+  { label:'סניפים ללא מזומן',               color:'#E0E0E0', sortOrder:3 },
+  { label:'חסומים להזמנת שליח דרייב',       color:'#FFEE58', sortOrder:4 },
+  { label:'שיחות במוקד',                    color:'#90CAF9', sortOrder:5 },
+];
+
+const DEFAULT_BRANCHES = [
+  'חולון פארק פרס','כפר סבא ירוקה','נמל','יבנה','פלורנטין','הוד"ש',
+  'ראשון מזרח','סטרומה','קריית אונו','יהוד','אבן גבירול','אשדוד סיטי','בת ים'
+];
+
+// ─── Helpers ───
+function fmtTime(ts) {
+  if(!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDuration(ms) {
+  if(!ms||ms<0) return "0 דק'";
+  const m=Math.floor(ms/60000);
+  if(m<60) return m+"דק'";
+  const h=Math.floor(m/60),rm=m%60;
+  if(h<24) return h+"ש'"+(rm?'+'+rm+"דק'":'');
+  return Math.floor(h/24)+'ימים';
+}
+function elapsed(ts) {
+  const d = ts?.toDate ? ts.toDate() : new Date(ts||0);
+  return fmtDuration(Date.now()-d.getTime());
+}
+function statusById(id) {
+  return window._state.statuses.find(s=>s.id===id)||{label:id,color:'#ccc'};
+}
+function contrastText(hex) {
+  if(!hex||hex.length<7) return '#000';
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return (r*299+g*587+b*114)/1000>140?'#1a1916':'#ffffff';
+}
+
+// ─── Seed initial data ───
+async function seedIfEmpty() {
+  const [bSnap, sSnap] = await Promise.all([getDocs(branchesCol), getDocs(statusesCol)]);
+  if(sSnap.empty) {
+    for(const s of DEFAULT_STATUSES) await addDoc(statusesCol, s);
+  }
+  if(bSnap.empty) {
+    for(const name of DEFAULT_BRANCHES) await addDoc(branchesCol, { name, createdAt: serverTimestamp() });
+  }
+}
+
+// ─── Realtime listeners ───
+function setupListeners() {
+  onSnapshot(collection(db,'branches'), snap => {
+    window._state.branches = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name,'he'));
+    if(document.getElementById('page-settings').classList.contains('hidden')===false) renderSettings();
+    refreshAddBranchSelect();
+  });
+
+  onSnapshot(query(collection(db,'statuses'),orderBy('sortOrder')), snap => {
+    window._state.statuses = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderDashboard();
+    if(document.getElementById('page-settings').classList.contains('hidden')===false) renderSettings();
+  });
+
+  onSnapshot(collection(db,'active_events'), snap => {
+    window._state.active = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderDashboard();
+    document.getElementById('dash-sub').textContent = 'עדכון חי · ' + new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  });
+
+  onSnapshot(query(collection(db,'status_logs'),orderBy('startedAt','desc')), snap => {
+    window._state.logs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!document.getElementById('page-reports').classList.contains('hidden')) renderReports();
+  });
+
+  onSnapshot(settingsDoc, snap => {
+    if(snap.exists()) {
+      window._state.settings = snap.data();
+      document.getElementById('wa-numbers').value = snap.data().waNumbers||'';
+      document.getElementById('wa-sender').value = snap.data().waSender||'מוקד אלגד';
+    }
+  });
+}
+
+// ─── Init ───
+async function init() {
+  try {
+    await seedIfEmpty();
+    setupListeners();
+    document.getElementById('loading-screen').classList.add('done');
+  } catch(e) {
+    document.querySelector('.loading-text').textContent = 'שגיאת חיבור: '+e.message;
+    console.error(e);
+  }
+}
+
+// ─── CRUD ───
+window._db = {
+  async addActive(branchName, statusId, note) {
+    const now = serverTimestamp();
+    const ref = await addDoc(activeCol, { branchName, currentStatus:statusId, note, createdAt:now, statusChangedAt:now });
+    await addDoc(logsCol, { eventId:ref.id, branchName, statusId, note, startedAt:now, endedAt:null });
+  },
+  async updateActive(id, statusId, note) {
+    const now = serverTimestamp();
+    // close previous log
+    const logsSnap = await getDocs(query(logsCol));
+    const openLog = logsSnap.docs.find(d=>d.data().eventId===id && d.data().endedAt===null);
+    if(openLog) {
+      const startMs = openLog.data().startedAt?.toDate?.()?.getTime()||Date.now();
+      await updateDoc(doc(db,'status_logs',openLog.id), { endedAt:now, durationMinutes: Math.round((Date.now()-startMs)/60000) });
+    }
+    await updateDoc(doc(db,'active_events',id), { currentStatus:statusId, note, statusChangedAt:now });
+    const ev = window._state.active.find(a=>a.id===id);
+    await addDoc(logsCol, { eventId:id, branchName:ev?.branchName||'', statusId, note, startedAt:now, endedAt:null });
+  },
+  async restore(id, note) {
+    const now = serverTimestamp();
+    const logsSnap = await getDocs(query(logsCol));
+    const openLog = logsSnap.docs.find(d=>d.data().eventId===id && d.data().endedAt===null);
+    if(openLog) {
+      const startMs = openLog.data().startedAt?.toDate?.()?.getTime()||Date.now();
+      await updateDoc(doc(db,'status_logs',openLog.id), { endedAt:now, durationMinutes: Math.round((Date.now()-startMs)/60000) });
+    }
+    await deleteDoc(doc(db,'active_events',id));
+  },
+  async addBranch(name) { await addDoc(branchesCol, { name, createdAt:serverTimestamp() }); },
+  async deleteBranch(id) { await deleteDoc(doc(db,'branches',id)); },
+  async addStatus(label, color) { await addDoc(statusesCol, { label, color, sortOrder: window._state.statuses.length }); },
+  async updateStatus(id, label, color) { await updateDoc(doc(db,'statuses',id), { label, color }); },
+  async deleteStatus(id) { await deleteDoc(doc(db,'statuses',id)); },
+  async saveSettings(data) { await setDoc(settingsDoc, data, { merge:true }); },
+};
+
+// ─── Expose to global scope ───
+window._fmtTime = fmtTime;
+window._fmtDuration = fmtDuration;
+window._elapsed = elapsed;
+window._statusById = statusById;
+window._contrastText = contrastText;
+
+init();
+</script>
+
+<script>
+// ─── UI Layer ───
+let editingId = null;
+let selectedStatusId = null;
+let selectedStatusIdUpdate = null;
+let currentView = 'table';
+
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+function showPage(name) {
+  ['dashboard','reports','settings'].forEach(p=>{
+    document.getElementById('page-'+p).classList.toggle('hidden',p!==name);
+    document.getElementById('nav-'+p).classList.toggle('active',p===name);
+  });
+  if(name==='reports'){ populateReportFilters(); renderReports(); }
+  if(name==='settings') renderSettings();
+}
+
+function setView(v) {
+  currentView=v;
+  document.getElementById('view-table').classList.toggle('hidden',v!=='table');
+  document.getElementById('view-cards').classList.toggle('hidden',v!=='cards');
+  document.getElementById('vbtn-table').classList.toggle('active',v==='table');
+  document.getElementById('vbtn-cards').classList.toggle('active',v==='cards');
+  renderDashboard();
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); }));
+
+// ─── Status picker ───
+function buildStatusPicker(containerId, selected, cbName) {
+  const st = window._state?.statuses||[];
+  document.getElementById(containerId).innerHTML = st.map(s=>
+    `<button class="status-opt${selected===s.id?' selected':''}" data-id="${s.id}"
+      style="${selected===s.id?'border-color:'+s.color:''}"
+      onclick="${cbName}(this)">
+      <span class="dot" style="background:${s.color}"></span>${s.label}
+    </button>`
+  ).join('');
+}
+function pickerSelectAdd(btn) {
+  document.querySelectorAll('#ab-status-picker .status-opt').forEach(e=>{e.classList.remove('selected');e.style.borderColor='';});
+  btn.classList.add('selected'); btn.style.borderColor=window._statusById(btn.dataset.id).color;
+  selectedStatusId=btn.dataset.id;
+}
+function pickerSelectUpdate(btn) {
+  document.querySelectorAll('#up-status-picker .status-opt').forEach(e=>{e.classList.remove('selected');e.style.borderColor='';});
+  btn.classList.add('selected'); btn.style.borderColor=window._statusById(btn.dataset.id).color;
+  selectedStatusIdUpdate=btn.dataset.id;
+}
+
+// ─── Add Branch ───
+function refreshAddBranchSelect() {
+  const sel = document.getElementById('ab-branch');
+  if(!sel) return;
+  const inUse = new Set(window._state.active.map(a=>a.branchName));
+  sel.innerHTML='<option value="">בחר סניף...</option>'+
+    window._state.branches.filter(b=>!inUse.has(b.name)).map(b=>`<option>${b.name}</option>`).join('');
+}
+function openAddBranchModal() {
+  refreshAddBranchSelect();
+  document.getElementById('ab-note').value='';
+  selectedStatusId = window._state.statuses[0]?.id||null;
+  buildStatusPicker('ab-status-picker', selectedStatusId, 'pickerSelectAdd');
+  openModal('modal-add-branch');
+}
+function confirmAddBranch() {
+  const branchName=document.getElementById('ab-branch').value;
+  if(!branchName){alert('בחר סניף');return;}
+  if(!selectedStatusId){alert('בחר סטטוס');return;}
+  const note=document.getElementById('ab-note').value.trim();
+  window._db.addActive(branchName,selectedStatusId,note);
+  closeModal('modal-add-branch');
+}
+
+// ─── Update Status ───
+function openUpdateModal(id) {
+  editingId=id;
+  const b=window._state.active.find(x=>x.id===id);
+  document.getElementById('update-title').textContent='עדכן סטטוס — '+b.branchName;
+  document.getElementById('update-note').value='';
+  selectedStatusIdUpdate=b.currentStatus;
+  buildStatusPicker('up-status-picker',selectedStatusIdUpdate,'pickerSelectUpdate');
+  openModal('modal-update');
+}
+function confirmUpdate() {
+  if(!editingId){closeModal('modal-update');return;}
+  const note=document.getElementById('update-note').value.trim();
+  window._db.updateActive(editingId,selectedStatusIdUpdate,note);
+  closeModal('modal-update');
+}
+
+// ─── Restore ───
+function openRestoreModal(id) {
+  editingId=id;
+  const b=window._state.active.find(x=>x.id===id);
+  document.getElementById('restore-title').textContent='חזרה לשגרה — '+b.branchName;
+  document.getElementById('restore-note').value='';
+  openModal('modal-restore');
+}
+function confirmRestore() {
+  if(!editingId){closeModal('modal-restore');return;}
+  const note=document.getElementById('restore-note').value.trim()||'חזרה לשגרה';
+  window._db.restore(editingId,note);
+  closeModal('modal-restore');
+}
+
+// ─── WhatsApp ───
+function openWAModal() {
+  const st=window._state;
+  const lines=['🔔 *עדכון סטטוס סניפים — '+new Date().toLocaleDateString('he-IL')+'*',''];
+  if(!st.active.length) lines.push('✅ כל הסניפים בשגרה.');
+  else {
+    const g={};
+    st.active.forEach(b=>{if(!g[b.currentStatus])g[b.currentStatus]=[];g[b.currentStatus].push(b);});
+    Object.entries(g).forEach(([sid,arr])=>{
+      lines.push('*'+window._statusById(sid).label+':*');
+      arr.forEach(b=>lines.push('  • '+b.branchName+(b.note?' — '+b.note:'')));
+      lines.push('');
+    });
+  }
+  lines.push('— '+(st.settings.waSender||'מוקד אלגד'));
+  document.getElementById('wa-preview-text').textContent=lines.join('\n');
+  document.getElementById('wa-target').value=(st.settings.waNumbers||'').split(',')[0]?.trim()||'';
+  setWATab('text');
+  openModal('modal-wa');
+}
+function setWATab(tab) {
+  document.getElementById('wa-panel-text').classList.toggle('hidden',tab!=='text');
+  document.getElementById('wa-panel-img').classList.toggle('hidden',tab!=='img');
+  ['text','img'].forEach(t=>{
+    const btn=document.getElementById('wa-tab-'+t);
+    btn.style.background=t===tab?'var(--accent)':'';
+    btn.style.color=t===tab?'#fff':'';
+    btn.style.borderColor=t===tab?'var(--accent)':'';
+  });
+}
+function sendWA() {
+  const num=document.getElementById('wa-target').value.replace(/\D/g,'');
+  const text=document.getElementById('wa-preview-text').textContent;
+  const full=num.startsWith('972')?num:('972'+num.replace(/^0/,''));
+  window.open('https://wa.me/'+full+'?text='+encodeURIComponent(text),'_blank');
+}
+function captureTable() {
+  const btn=event.target; btn.textContent='⏳ מצלם...'; btn.disabled=true;
+  const tbl=document.getElementById('warroom-table');
+  if(!tbl){alert('עבור לתצוגת טבלה תחילה');btn.textContent='📸 צלם';btn.disabled=false;return;}
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload=()=>{
+    const wrap=tbl.closest('.warroom-wrap')||tbl;
+    html2canvas(wrap,{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false}).then(canvas=>{
+      canvas.style.cssText='max-width:100%;border-radius:8px;border:1px solid #ddd';
+      const prev=document.getElementById('wa-img-preview');
+      prev.innerHTML=''; prev.appendChild(canvas);
+      const a=document.createElement('a');
+      a.download='warroom_'+new Date().toLocaleDateString('he-IL').replace(/\./g,'-')+'.png';
+      a.href=canvas.toDataURL('image/png'); a.click();
+      btn.textContent='✅ הורד! כעת שלח ב-WA'; btn.disabled=false;
+    }).catch(e=>{alert('שגיאה: '+e.message);btn.textContent='📸 צלם';btn.disabled=false;});
+  };
+  s.onerror=()=>{alert('לא ניתן לטעון ספריה');btn.textContent='📸 צלם';btn.disabled=false;};
+  document.head.appendChild(s);
+}
+
+// ─── Dashboard ───
+function renderDashboard() {
+  const st=window._state;
+  if(!st.statuses.length) return;
+
+  const strip=document.getElementById('summary-strip');
+  let cards=`<div class="summary-card"><div class="num">${st.active.length}</div><div class="lbl">סניפים פעילים</div></div>`;
+  st.statuses.forEach(s=>{
+    const cnt=st.active.filter(b=>b.currentStatus===s.id).length;
+    if(cnt>0) cards+=`<div class="summary-card"><div class="num" style="color:${s.color}">${cnt}</div><div class="lbl" style="font-size:11px">${s.label}</div></div>`;
+  });
+  strip.innerHTML=cards;
+
+  if(currentView==='table') renderWarroomTable();
+  else renderCards();
+}
+
+// ─── Urgency helpers ───
+function getElapsedMs(ts) {
+  if(!ts) return 0;
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return Date.now() - d.getTime();
+}
+function urgencyStyle(ts) {
+  const ms = getElapsedMs(ts);
+  if(ms >= 60*60*1000)   return { bg:'#FFEBEE', border:'#E53935', label:'🔴' }; // > 60 min → red
+  if(ms >= 45*60*1000)   return { bg:'#FFF3E0', border:'#F5A623', label:'🟠' }; // > 45 min → orange
+  return { bg:'', border:'', label:'' };
+}
+function fmtAddedTime(ts) {
+  if(!ts) return '';
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderWarroomTable() {
+  const {statuses,active}=window._state;
+  const cols={};
+  statuses.forEach(s=>cols[s.id]=[]);
+  active.forEach(b=>{if(cols[b.currentStatus])cols[b.currentStatus].push(b);});
+  const maxRows=Math.max(1,...statuses.map(s=>cols[s.id].length));
+
+  document.getElementById('warroom-head').innerHTML='<tr>'+statuses.map(s=>{
+    const tc=window._contrastText(s.color);
+    return `<th style="background:${s.color};color:${tc}">${s.label}<br><span style="font-size:11px;font-weight:400;opacity:.8">${cols[s.id].length} סניפים</span></th>`;
+  }).join('')+'</tr>';
+
+  let tbody='';
+  for(let i=0;i<maxRows;i++){
+    tbody+='<tr>';
+    statuses.forEach(s=>{
+      const b=cols[s.id][i];
+      if(b){
+        const u=urgencyStyle(b.statusChangedAt);
+        const addedTime=fmtAddedTime(b.statusChangedAt);
+        const cellStyle=u.bg?`background:${u.bg};border:2px solid ${u.border};`:'';
+        tbody+=`<td style="font-weight:600;${cellStyle}">
+          <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+            ${u.label?`<span style="font-size:14px">${u.label}</span>`:''}
+            <span>${b.branchName}</span>
+          </div>
+          ${b.note?`<div class="wt-note">${b.note}</div>`:''}
+          <div class="wt-elapsed" style="${u.bg?'color:'+u.border+';font-weight:600':''}">
+            ${addedTime} · ${window._elapsed(b.statusChangedAt)}
+          </div>
+          <div style="margin-top:5px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="openUpdateModal('${b.id}')">עדכן</button>
+            <button class="btn btn-sm btn-success" onclick="openRestoreModal('${b.id}')">שגרה</button>
+          </div></td>`;
+      } else { tbody+='<td style="color:#ddd"></td>'; }
+    });
+    tbody+='</tr>';
+  }
+  if(!tbody) tbody=`<tr><td colspan="${statuses.length}" style="text-align:center;padding:40px;color:#999">אין סניפים פעילים</td></tr>`;
+  document.getElementById('warroom-body').innerHTML=tbody;
+}
+
+function renderCards() {
+  const {active}=window._state;
+  const grid=document.getElementById('branch-grid');
+  if(!active.length){
+    grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><p>כל הסניפים בשגרה</p></div>`;
+    return;
+  }
+  grid.innerHTML=active.map(b=>{
+    const st=window._statusById(b.currentStatus);
+    const u=urgencyStyle(b.statusChangedAt);
+    const addedTime=fmtAddedTime(b.statusChangedAt);
+    const cardBorder=u.border?`border:2px solid ${u.border};background:${u.bg}`:'border:1px solid var(--border)';
+    return `<div class="branch-card" style="${cardBorder}">
+      <div class="bc-top">
+        <div>
+          <div class="bc-name">${u.label?u.label+' ':''} ${b.branchName}</div>
+          <div class="bc-elapsed" style="${u.border?'color:'+u.border+';font-weight:600':''}">
+            הוסף בשעה ${addedTime} · לפני ${window._elapsed(b.statusChangedAt)}
+          </div>
+        </div>
+        <span class="badge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}44">${st.label}</span>
+      </div>
+      ${b.note?`<div class="bc-note">${b.note}</div>`:''}
+      <div class="bc-actions">
+        <button class="btn btn-sm" onclick="openUpdateModal('${b.id}')">שנה סטטוס</button>
+        <button class="btn btn-sm btn-success" onclick="openRestoreModal('${b.id}')">חזרה לשגרה</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Reports ───
+function populateReportFilters() {
+  const {logs,statuses}=window._state;
+  const allB=[...new Set(logs.map(l=>l.branchName))].sort();
+  document.getElementById('filter-branch').innerHTML='<option value="">כל הסניפים</option>'+allB.map(b=>`<option>${b}</option>`).join('');
+  document.getElementById('filter-status').innerHTML='<option value="">כל הסטטוסים</option>'+statuses.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+}
+function clearFilters(){
+  ['filter-branch','filter-status','filter-from','filter-to'].forEach(id=>document.getElementById(id).value='');
+  renderReports();
+}
+function renderReports() {
+  const fb=document.getElementById('filter-branch').value;
+  const fs=document.getElementById('filter-status').value;
+  const ff=document.getElementById('filter-from').value?new Date(document.getElementById('filter-from').value).getTime():0;
+  const ft=document.getElementById('filter-to').value?new Date(document.getElementById('filter-to').value).getTime()+86400000:Infinity;
+
+  let rows=window._state.logs.filter(l=>{
+    if(fb&&l.branchName!==fb) return false;
+    if(fs&&l.statusId!==fs) return false;
+    const ts=l.startedAt?.toDate?.()?.getTime()||0;
+    if(ff&&ts<ff) return false;
+    if(ft&&ts>ft) return false;
+    return true;
+  });
+
+  const totals={};
+  window._state.statuses.forEach(s=>totals[s.id]=0);
+  rows.forEach(l=>{
+    const dur=(l.durationMinutes||0)*60000;
+    if(totals[l.statusId]!==undefined) totals[l.statusId]+=dur;
+  });
+
+  document.getElementById('report-summary').innerHTML=window._state.statuses.map(s=>
+    `<div class="summary-card"><div class="num" style="font-size:18px;color:${s.color}">${window._fmtDuration(totals[s.id])}</div><div class="lbl" style="font-size:10px">${s.label}</div></div>`
+  ).join('');
+
+  document.getElementById('report-body').innerHTML=rows.length
+    ? rows.map(l=>{
+        const st=window._statusById(l.statusId);
+        const endedAt=l.endedAt?.toDate?.();
+        return `<tr>
+          <td><strong>${l.branchName}</strong></td>
+          <td><span class="badge" style="background:${st.color}22;color:${st.color}">${st.label}</span></td>
+          <td style="color:var(--text2)">${l.note||'—'}</td>
+          <td>${window._fmtTime(l.startedAt)}</td>
+          <td>${endedAt?window._fmtTime(l.endedAt):'<span style="color:#e53935">פעיל</span>'}</td>
+          <td><strong>${l.durationMinutes!=null?l.durationMinutes+"דק'":'פעיל'}</strong></td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">אין נתונים</td></tr>';
+}
+function exportCSV() {
+  const header="סניף,סטטוס,הערה,תחילה,סיום,משך (דק')\n";
+  const rows=window._state.logs.map(l=>`${l.branchName},${window._statusById(l.statusId).label},${l.note||''},${window._fmtTime(l.startedAt)},${l.endedAt?window._fmtTime(l.endedAt):'פעיל'},${l.durationMinutes||0}`).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(header+rows);
+  a.download='report_'+new Date().toLocaleDateString('he-IL').replace(/\./g,'-')+'.csv';
+  a.click();
+}
+
+// ─── Settings ───
+function renderSettings() {
+  const {branches,statuses}=window._state;
+  document.getElementById('settings-branches-list').innerHTML=branches.length
+    ? branches.map(b=>`<div class="list-item"><span style="font-weight:500">${b.name}</span><button class="btn btn-sm btn-danger" onclick="deleteBranchDef('${b.id}','${b.name}')">מחק</button></div>`).join('')
+    : '<div style="color:var(--text3);font-size:13px;padding:6px 0">אין סניפים</div>';
+
+  document.getElementById('settings-statuses-list').innerHTML=statuses.map((s,i)=>`
+    <div class="st-row">
+      <div class="st-color-swatch" style="background:${s.color}" onclick="document.getElementById('sc-${i}').click()"></div>
+      <input type="color" id="sc-${i}" value="${s.color}" style="display:none" onchange="window._db.updateStatus('${s.id}',document.getElementById('sl-${i}').value,this.value)">
+      <input type="text" id="sl-${i}" value="${s.label}" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)" onblur="window._db.updateStatus('${s.id}',this.value,document.getElementById('sc-${i}').value)">
+      <button class="btn btn-sm btn-danger" onclick="deleteStatusDef('${s.id}','${s.label}')">מחק</button>
+    </div>`).join('');
+
+  document.getElementById('wa-numbers').value=window._state.settings.waNumbers||'';
+  document.getElementById('wa-sender').value=window._state.settings.waSender||'מוקד אלגד';
+}
+
+function addBranchDef() {
+  const val=document.getElementById('new-branch-name').value.trim();
+  if(!val) return;
+  if(window._state.branches.find(b=>b.name===val)){alert('קיים כבר');return;}
+  window._db.addBranch(val);
+  document.getElementById('new-branch-name').value='';
+}
+function deleteBranchDef(id, name) {
+  if(window._state.active.find(b=>b.branchName===name)){alert('לא ניתן — הסניף פעיל כרגע');return;}
+  if(!confirm('למחוק "'+name+'"?')) return;
+  window._db.deleteBranch(id);
+}
+function addStatusDef() {
+  const label=document.getElementById('new-st-label').value.trim();
+  const color=document.getElementById('new-st-color').value;
+  if(!label) return;
+  window._db.addStatus(label,color);
+  document.getElementById('new-st-label').value='';
+}
+function deleteStatusDef(id, label) {
+  if(window._state.statuses.length<=1){alert('חייב להישאר לפחות סטטוס אחד');return;}
+  if(window._state.active.find(b=>b.currentStatus===id)){alert('לא ניתן — יש סניפים פעילים בסטטוס זה');return;}
+  if(!confirm('למחוק "'+label+'"?')) return;
+  window._db.deleteStatus(id);
+}
+function saveWASettings() {
+  const data={waNumbers:document.getElementById('wa-numbers').value.trim(),waSender:document.getElementById('wa-sender').value.trim()||'מוקד אלגד'};
+  window._db.saveSettings(data);
+  const btn=event.target; btn.textContent='נשמר ✓'; setTimeout(()=>btn.textContent='שמור',2000);
+}
+
+// רענון אוטומטי כל דקה לעדכון צבעי הדחיפות
+setInterval(()=>{
+  if(!document.getElementById('page-dashboard').classList.contains('hidden')) renderDashboard();
+}, 60000);
+</script>
+</body>
+</html>
