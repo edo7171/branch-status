@@ -14,7 +14,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 .app{display:flex;min-height:100vh}
-.sidebar{width:210px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;position:fixed;right:0;top:0;bottom:0;z-index:50}
+
 .sidebar-logo{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
 .sidebar-logo .brand{font-size:18px;font-weight:700}
 .sidebar-logo .sub{font-size:11px;color:var(--text3);margin-top:2px}
@@ -24,7 +24,7 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 .nav-item.active{background:var(--accent);color:#fff}
 .nav-item svg{width:15px;height:15px;flex-shrink:0}
 .sidebar-footer{padding:10px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
-.main{margin-right:210px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.main{margin-right:0;flex:1;display:flex;flex-direction:column;min-height:100vh}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
 .topbar-title{font-size:15px;font-weight:600}
 .topbar-sub{font-size:11px;color:var(--text3);margin-top:1px}
@@ -122,6 +122,13 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 /* Realtime indicator */
 .rt-dot{width:8px;height:8px;border-radius:50%;background:#43A047;display:inline-block;margin-left:6px;animation:pulse-dot 2s ease infinite}
 @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+/* Sidebar toggle */
+.sidebar{width:220px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;position:fixed;right:0;top:0;bottom:0;z-index:50;transform:translateX(100%);transition:transform .25s ease;box-shadow:-4px 0 20px rgba(0,0,0,.12)}
+.sidebar.open{transform:translateX(0)}
+.main{margin-right:0;transition:none}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:49;backdrop-filter:blur(2px)}
+.sidebar-overlay.open{display:block}
 </style>
 </head>
 <body>
@@ -141,30 +148,34 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
   <nav class="nav">
     <button class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      לוח ראשי
+      <span class="nav-item-label">לוח ראשי</span>
     </button>
     <button class="nav-item" onclick="showPage('reports')" id="nav-reports">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      דוחות
+      <span class="nav-item-label">דוחות</span>
     </button>
     <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      הגדרות
+      <span class="nav-item-label">הגדרות</span>
     </button>
   </nav>
   <div class="sidebar-footer">
-    <span class="rt-dot"></span>Firebase Live · גרסה 2.0
+    <span class="rt-dot"></span><span class="sidebar-footer-text">Firebase Live · גרסה 2.0</span>
   </div>
 </aside>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <main class="main">
 
 <!-- DASHBOARD -->
 <div id="page-dashboard">
   <div class="topbar">
-    <div>
-      <div class="topbar-title">לוח ניהול סניפים</div>
-      <div class="topbar-sub" id="dash-sub">מתחבר...</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn" onclick="openSidebar()" style="padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div>
+        <div class="topbar-title">לוח ניהול סניפים</div>
+        <div class="topbar-sub" id="dash-sub">מתחבר...</div>
+      </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <div class="view-toggle">
@@ -197,7 +208,7 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 <!-- REPORTS -->
 <div id="page-reports" class="hidden">
   <div class="topbar">
-    <div><div class="topbar-title">דוחות</div><div class="topbar-sub">מעקב זמנים לפי סניף וסטטוס</div></div>
+    <div style="display:flex;align-items:center;gap:10px"><button class="btn" onclick="openSidebar()" style="padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><div><div class="topbar-title">דוחות</div><div class="topbar-sub">מעקב זמנים לפי סניף וסטטוס</div></div></div>
     <button class="btn" onclick="exportCSV()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       CSV
@@ -221,7 +232,7 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 
 <!-- SETTINGS -->
 <div id="page-settings" class="hidden">
-  <div class="topbar"><div><div class="topbar-title">הגדרות</div><div class="topbar-sub">סניפים, סטטוסים, WhatsApp</div></div></div>
+  <div class="topbar"><div style="display:flex;align-items:center;gap:10px"><button class="btn" onclick="openSidebar()" style="padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><div><div class="topbar-title">הגדרות</div><div class="topbar-sub">סניפים, סטטוסים, WhatsApp</div></div></div></div>
   <div class="content">
     <div class="settings-section">
       <h3>סניפים</h3>
@@ -517,6 +528,7 @@ function showPage(name) {
   });
   if(name==='reports'){ populateReportFilters(); renderReports(); }
   if(name==='settings') renderSettings();
+  closeSidebar();
 }
 
 function setView(v) {
@@ -724,9 +736,9 @@ function renderWarroomTable() {
         const u=urgencyStyle(b.statusChangedAt);
         const addedTime=fmtAddedTime(b.statusChangedAt);
         const cellStyle=u.bg?`background:${u.bg};border:2px solid ${u.border};`:'';
-        tbody+=`<td style="font-weight:600;${cellStyle}">
+        tbody+=`<td id="wt-cell-${b.id}" style="font-weight:600;${cellStyle}">
           <div style="display:flex;align-items:center;justify-content:center;gap:5px">
-            ${u.label?`<span style="font-size:14px">${u.label}</span>`:''}
+            <span class="urgency-icon" style="font-size:14px">${u.label||''}</span>
             <span>${b.branchName}</span>
           </div>
           ${b.note?`<div class="wt-note">${b.note}</div>`:''}
@@ -757,7 +769,7 @@ function renderCards() {
     const u=urgencyStyle(b.statusChangedAt);
     const addedTime=fmtAddedTime(b.statusChangedAt);
     const cardBorder=u.border?`border:2px solid ${u.border};background:${u.bg}`:'border:1px solid var(--border)';
-    return `<div class="branch-card" style="${cardBorder}">
+    return `<div id="bc-card-${b.id}" class="branch-card" style="${cardBorder}">
       <div class="bc-top">
         <div>
           <div class="bc-name">${u.label?u.label+' ':''} ${b.branchName}</div>
@@ -887,10 +899,79 @@ function saveWASettings() {
   const btn=event.target; btn.textContent='נשמר ✓'; setTimeout(()=>btn.textContent='שמור',2000);
 }
 
-// רענון אוטומטי כל דקה לעדכון צבעי הדחיפות
+// רענון כל 30 שניות לעדכון זמנים וצבעי דחיפות
 setInterval(()=>{
-  if(!document.getElementById('page-dashboard').classList.contains('hidden')) renderDashboard();
-}, 60000);
+  if(!document.getElementById('page-dashboard').classList.contains('hidden')) {
+    // עדכן רק את הזמנים והצבעים — בלי לשכתב את כל ה-DOM
+    tickTimers();
+  }
+}, 10000);
+
+function tickTimers() {
+  const {active, statuses} = window._state;
+  if(!active.length) return;
+
+  // עדכן כל תא/כרטיס לפי ה-id שלו
+  active.forEach(b => {
+    const ms = getElapsedMs(b.statusChangedAt);
+    const u = urgencyStyle(b.statusChangedAt);
+    const addedTime = fmtAddedTime(b.statusChangedAt);
+    const elapsedStr = window._elapsed(b.statusChangedAt);
+
+    // עדכון תצוגת טבלה
+    const cell = document.getElementById('wt-cell-'+b.id);
+    if(cell) {
+      const elEl = cell.querySelector('.wt-elapsed');
+      if(elEl) {
+        elEl.textContent = addedTime + ' · ' + elapsedStr;
+        elEl.style.color = u.border || '';
+        elEl.style.fontWeight = u.border ? '600' : '';
+      }
+      if(u.bg) {
+        cell.style.background = u.bg;
+        cell.style.border = '2px solid ' + u.border;
+      } else {
+        cell.style.background = '';
+        cell.style.border = '';
+      }
+      const icon = cell.querySelector('.urgency-icon');
+      if(icon) icon.textContent = u.label || '';
+    }
+
+    // עדכון כרטיסית
+    const card = document.getElementById('bc-card-'+b.id);
+    if(card) {
+      const elEl = card.querySelector('.bc-elapsed');
+      if(elEl) {
+        elEl.textContent = 'הוסף בשעה ' + addedTime + ' · לפני ' + elapsedStr;
+        elEl.style.color = u.border || '';
+        elEl.style.fontWeight = u.border ? '600' : '';
+      }
+      if(u.bg) {
+        card.style.background = u.bg;
+        card.style.border = '2px solid ' + u.border;
+      } else {
+        card.style.background = 'var(--surface)';
+        card.style.border = '1px solid var(--border)';
+      }
+      const nameEl = card.querySelector('.bc-name');
+      if(nameEl) {
+        nameEl.textContent = (u.label ? u.label + ' ' : '') + b.branchName;
+      }
+    }
+  });
+}
+
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
 </script>
 </body>
 </html>
