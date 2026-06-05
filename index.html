@@ -106,6 +106,21 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 .report-filters select,.report-filters input{padding:7px 11px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)}
 .wa-preview{background:#E8FDD8;border-radius:10px;padding:11px 13px;font-size:13px;color:#111;white-space:pre-wrap;margin-bottom:10px;border:1px solid #C5EDA9;direction:rtl}
 input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-radius:6px;padding:2px;cursor:pointer;background:none}
+
+/* Permanent badge */
+.perm-badge{display:inline-block;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:600;margin-top:4px}
+.perm-badge.permanent{background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9}
+.perm-badge.temporary{background:#F3E5F5;color:#6A1B9A;border:1px solid #CE93D8}
+
+/* Type toggle in modal */
+.type-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.type-btn{flex:1;padding:8px 12px;border:none;background:none;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .15s}
+.type-btn.active{background:var(--accent);color:#fff}
+.type-btn.perm.active{background:#1565C0;color:#fff}
+
+/* Multi-status picker */
+.status-opt.multi-selected{border-color:var(--accent);background:var(--surface2)}
+
 .hidden{display:none!important}
 .mt12{margin-top:12px}
 .chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)}
@@ -265,11 +280,21 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 
 <!-- MODAL: Add Branch -->
 <div class="overlay" id="modal-add-branch">
-<div class="modal">
+<div class="modal" style="width:480px">
   <h2>הוסף סניף לא בשגרה</h2>
   <div class="field"><label>סניף</label><select id="ab-branch"><option value="">בחר סניף...</option></select></div>
-  <div class="field"><label>סטטוס</label><div class="status-picker" id="ab-status-picker"></div></div>
+  <div class="field">
+    <label>סטטוסים <span style="font-size:11px;color:var(--text3)">(ניתן לבחור כמה)</span></label>
+    <div class="status-picker" id="ab-status-picker" style="grid-template-columns:1fr 1fr"></div>
+  </div>
   <div class="field"><label>הערה</label><textarea id="ab-note" placeholder="סיבה, פרטים..."></textarea></div>
+  <div class="field">
+    <label>סוג</label>
+    <div class="type-toggle">
+      <button class="type-btn active" id="type-btn-temp" onclick="setAddType('temporary')">⏱ זמני</button>
+      <button class="type-btn perm" id="type-btn-perm" onclick="setAddType('permanent')">📌 קבוע</button>
+    </div>
+  </div>
   <div class="modal-footer">
     <button class="btn" onclick="closeModal('modal-add-branch')">ביטול</button>
     <button class="btn btn-primary" onclick="confirmAddBranch()">הוסף</button>
@@ -279,10 +304,17 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 
 <!-- MODAL: Update Status -->
 <div class="overlay" id="modal-update">
-<div class="modal">
+<div class="modal" style="width:480px">
   <h2 id="update-title">עדכן סטטוס</h2>
-  <div class="field"><label>סטטוס</label><div class="status-picker" id="up-status-picker"></div></div>
+  <div class="field"><label>סטטוס</label><div class="status-picker" id="up-status-picker" style="grid-template-columns:1fr 1fr"></div></div>
   <div class="field"><label>הערה</label><textarea id="update-note" placeholder="עדכון..."></textarea></div>
+  <div class="field">
+    <label>סוג</label>
+    <div class="type-toggle">
+      <button class="type-btn active" id="up-type-btn-temp" onclick="setUpdateType('temporary')">⏱ זמני</button>
+      <button class="type-btn perm" id="up-type-btn-perm" onclick="setUpdateType('permanent')">📌 קבוע</button>
+    </div>
+  </div>
   <div class="modal-footer">
     <button class="btn" onclick="closeModal('modal-update')">ביטול</button>
     <button class="btn btn-primary" onclick="confirmUpdate()">עדכן</button>
@@ -466,23 +498,25 @@ async function init() {
 
 // ─── CRUD ───
 window._db = {
-  async addActive(branchName, statusId, note) {
+  async addActive(branchName, statusIds, note, isPermanent) {
     const now = serverTimestamp();
-    const ref = await addDoc(activeCol, { branchName, currentStatus:statusId, note, createdAt:now, statusChangedAt:now });
-    await addDoc(logsCol, { eventId:ref.id, branchName, statusId, note, startedAt:now, endedAt:null });
+    // support multiple statuses — one active_event per status
+    for(const statusId of statusIds) {
+      const ref = await addDoc(activeCol, { branchName, currentStatus:statusId, note, isPermanent:!!isPermanent, createdAt:now, statusChangedAt:now });
+      await addDoc(logsCol, { eventId:ref.id, branchName, statusId, note, isPermanent:!!isPermanent, startedAt:now, endedAt:null });
+    }
   },
-  async updateActive(id, statusId, note) {
+  async updateActive(id, statusId, note, isPermanent) {
     const now = serverTimestamp();
-    // close previous log
     const logsSnap = await getDocs(query(logsCol));
     const openLog = logsSnap.docs.find(d=>d.data().eventId===id && d.data().endedAt===null);
     if(openLog) {
       const startMs = openLog.data().startedAt?.toDate?.()?.getTime()||Date.now();
       await updateDoc(doc(db,'status_logs',openLog.id), { endedAt:now, durationMinutes: Math.round((Date.now()-startMs)/60000) });
     }
-    await updateDoc(doc(db,'active_events',id), { currentStatus:statusId, note, statusChangedAt:now });
+    await updateDoc(doc(db,'active_events',id), { currentStatus:statusId, note, isPermanent:!!isPermanent, statusChangedAt:now });
     const ev = window._state.active.find(a=>a.id===id);
-    await addDoc(logsCol, { eventId:id, branchName:ev?.branchName||'', statusId, note, startedAt:now, endedAt:null });
+    await addDoc(logsCol, { eventId:id, branchName:ev?.branchName||'', statusId, note, isPermanent:!!isPermanent, startedAt:now, endedAt:null });
   },
   async restore(id, note) {
     const now = serverTimestamp();
@@ -570,40 +604,84 @@ function pickerSelectUpdate(btn) {
 function refreshAddBranchSelect() {
   const sel = document.getElementById('ab-branch');
   if(!sel) return;
-  const inUse = new Set(window._state.active.map(a=>a.branchName));
+  // Allow same branch in multiple statuses — show all branches
   sel.innerHTML='<option value="">בחר סניף...</option>'+
-    window._state.branches.filter(b=>!inUse.has(b.name)).map(b=>`<option>${b.name}</option>`).join('');
+    window._state.branches.map(b=>`<option>${b.name}</option>`).join('');
 }
+let addType = 'temporary';
+let selectedStatusIds = new Set();
+
+function setAddType(t) {
+  addType = t;
+  document.getElementById('type-btn-temp').classList.toggle('active', t==='temporary');
+  document.getElementById('type-btn-perm').classList.toggle('active', t==='permanent');
+}
+
 function openAddBranchModal() {
   refreshAddBranchSelect();
   document.getElementById('ab-note').value='';
-  selectedStatusId = window._state.statuses[0]?.id||null;
-  buildStatusPicker('ab-status-picker', selectedStatusId, 'pickerSelectAdd');
+  selectedStatusIds = new Set();
+  addType = 'temporary';
+  setAddType('temporary');
+  buildMultiStatusPicker('ab-status-picker');
   openModal('modal-add-branch');
+}
+
+function buildMultiStatusPicker(containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = window._state.statuses.map(s =>
+    `<button class="status-opt" data-id="${s.id}" onclick="toggleMultiStatus(this,'${s.id}')">
+      <span class="dot" style="background:${s.color}"></span>${s.label}
+    </button>`
+  ).join('');
+}
+
+function toggleMultiStatus(btn, id) {
+  if(selectedStatusIds.has(id)) {
+    selectedStatusIds.delete(id);
+    btn.classList.remove('multi-selected');
+    btn.style.borderColor='';
+  } else {
+    selectedStatusIds.add(id);
+    btn.classList.add('multi-selected');
+    btn.style.borderColor = window._statusById(id).color;
+  }
 }
 function confirmAddBranch() {
   const branchName=document.getElementById('ab-branch').value;
   if(!branchName){alert('בחר סניף');return;}
-  if(!selectedStatusId){alert('בחר סטטוס');return;}
+  if(!selectedStatusIds.size){alert('בחר לפחות סטטוס אחד');return;}
   const note=document.getElementById('ab-note').value.trim();
-  window._db.addActive(branchName,selectedStatusId,note);
+  const isPermanent = addType === 'permanent';
+  window._db.addActive(branchName, [...selectedStatusIds], note, isPermanent);
   closeModal('modal-add-branch');
 }
 
 // ─── Update Status ───
+let updateType = 'temporary';
+
+function setUpdateType(t) {
+  updateType = t;
+  document.getElementById('up-type-btn-temp').classList.toggle('active', t==='temporary');
+  document.getElementById('up-type-btn-perm').classList.toggle('active', t==='permanent');
+}
+
 function openUpdateModal(id) {
   editingId=id;
   const b=window._state.active.find(x=>x.id===id);
   document.getElementById('update-title').textContent='עדכן סטטוס — '+b.branchName;
-  document.getElementById('update-note').value='';
+  document.getElementById('update-note').value=b.note||'';
   selectedStatusIdUpdate=b.currentStatus;
+  updateType = b.isPermanent ? 'permanent' : 'temporary';
+  setUpdateType(updateType);
   buildStatusPicker('up-status-picker',selectedStatusIdUpdate,'pickerSelectUpdate');
   openModal('modal-update');
 }
 function confirmUpdate() {
   if(!editingId){closeModal('modal-update');return;}
   const note=document.getElementById('update-note').value.trim();
-  window._db.updateActive(editingId,selectedStatusIdUpdate,note);
+  const isPermanent = updateType === 'permanent';
+  window._db.updateActive(editingId,selectedStatusIdUpdate,note,isPermanent);
   closeModal('modal-update');
 }
 
@@ -703,10 +781,11 @@ function getElapsedMs(ts) {
   const d = ts?.toDate ? ts.toDate() : new Date(ts);
   return Date.now() - d.getTime();
 }
-function urgencyStyle(ts) {
+function urgencyStyle(ts, isPermanent) {
+  if(isPermanent) return { bg:'#E3F2FD', border:'#1565C0', label:'' }; // permanent → blue, no time warning
   const ms = getElapsedMs(ts);
-  if(ms >= 60*60*1000)   return { bg:'#FFEBEE', border:'#E53935', label:'🔴' }; // > 60 min → red
-  if(ms >= 45*60*1000)   return { bg:'#FFF3E0', border:'#F5A623', label:'🟠' }; // > 45 min → orange
+  if(ms >= 60*60*1000)   return { bg:'#FFEBEE', border:'#E53935', label:'🔴' };
+  if(ms >= 45*60*1000)   return { bg:'#FFF3E0', border:'#F5A623', label:'🟠' };
   return { bg:'', border:'', label:'' };
 }
 function fmtAddedTime(ts) {
@@ -733,17 +812,19 @@ function renderWarroomTable() {
     statuses.forEach(s=>{
       const b=cols[s.id][i];
       if(b){
-        const u=urgencyStyle(b.statusChangedAt);
+        const u=urgencyStyle(b.statusChangedAt, b.isPermanent);
         const addedTime=fmtAddedTime(b.statusChangedAt);
         const cellStyle=u.bg?`background:${u.bg};border:2px solid ${u.border};`:'';
+        const permLabel=b.isPermanent?`<span class="perm-badge permanent">📌 קבוע</span>`:`<span class="perm-badge temporary">⏱ זמני</span>`;
         tbody+=`<td id="wt-cell-${b.id}" style="font-weight:600;${cellStyle}">
           <div style="display:flex;align-items:center;justify-content:center;gap:5px">
             <span class="urgency-icon" style="font-size:14px">${u.label||''}</span>
             <span>${b.branchName}</span>
           </div>
+          ${permLabel}
           ${b.note?`<div class="wt-note">${b.note}</div>`:''}
-          <div class="wt-elapsed" style="${u.bg?'color:'+u.border+';font-weight:600':''}">
-            ${addedTime} · ${window._elapsed(b.statusChangedAt)}
+          <div class="wt-elapsed" style="${u.bg&&!b.isPermanent?'color:'+u.border+';font-weight:600':'color:#888'}">
+            ${b.isPermanent?'הוסף: '+addedTime:addedTime+' · '+window._elapsed(b.statusChangedAt)}
           </div>
           <div style="margin-top:5px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap">
             <button class="btn btn-sm" onclick="openUpdateModal('${b.id}')">עדכן</button>
@@ -766,22 +847,24 @@ function renderCards() {
   }
   grid.innerHTML=active.map(b=>{
     const st=window._statusById(b.currentStatus);
-    const u=urgencyStyle(b.statusChangedAt);
+    const u=urgencyStyle(b.statusChangedAt, b.isPermanent);
     const addedTime=fmtAddedTime(b.statusChangedAt);
     const cardBorder=u.border?`border:2px solid ${u.border};background:${u.bg}`:'border:1px solid var(--border)';
+    const permLabel=b.isPermanent?`<span class="perm-badge permanent">📌 קבוע</span>`:`<span class="perm-badge temporary">⏱ זמני</span>`;
     return `<div id="bc-card-${b.id}" class="branch-card" style="${cardBorder}">
       <div class="bc-top">
         <div>
           <div class="bc-name">${u.label?u.label+' ':''} ${b.branchName}</div>
-          <div class="bc-elapsed" style="${u.border?'color:'+u.border+';font-weight:600':''}">
-            הוסף בשעה ${addedTime} · לפני ${window._elapsed(b.statusChangedAt)}
+          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">${permLabel}</div>
+          <div class="bc-elapsed" style="${u.border&&!b.isPermanent?'color:'+u.border+';font-weight:600':''}">
+            ${b.isPermanent?'הוסף: '+addedTime:'הוסף בשעה '+addedTime+' · לפני '+window._elapsed(b.statusChangedAt)}
           </div>
         </div>
         <span class="badge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}44">${st.label}</span>
       </div>
       ${b.note?`<div class="bc-note">${b.note}</div>`:''}
       <div class="bc-actions">
-        <button class="btn btn-sm" onclick="openUpdateModal('${b.id}')">שנה סטטוס</button>
+        <button class="btn btn-sm" onclick="openUpdateModal('${b.id}')">עדכן / שנה סוג</button>
         <button class="btn btn-sm btn-success" onclick="openRestoreModal('${b.id}')">חזרה לשגרה</button>
       </div>
     </div>`;
