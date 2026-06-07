@@ -51,12 +51,12 @@ body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-h
 .vbtn svg{width:13px;height:13px}
 .warroom-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border)}
 .warroom-table{border-collapse:collapse;min-width:100%;font-size:13px;background:#fff}
-.warroom-table th{padding:12px 16px;font-weight:700;font-size:13px;text-align:center;border:1px solid rgba(0,0,0,.12);white-space:nowrap;position:sticky;top:0;z-index:5}
-.warroom-table td{padding:10px 14px;border:1px solid #ddd;text-align:center;vertical-align:middle;min-width:160px;font-size:13px}
+.warroom-table th{padding:14px 16px;font-weight:700;font-size:16px;text-align:center;border:1px solid rgba(0,0,0,.12);white-space:nowrap;position:sticky;top:0;z-index:5}
+.warroom-table td{padding:14px 16px;border:1px solid #ddd;text-align:center;vertical-align:middle;min-width:180px;font-size:16px}
 .warroom-table tbody tr:nth-child(even) td{background:#f9f9f9}
 .warroom-table tbody tr:nth-child(odd) td{background:#fff}
-.wt-note{font-size:11px;color:#555;margin-top:3px;font-weight:400}
-.wt-elapsed{font-size:10px;color:#888}
+.wt-note{font-size:13px;color:#555;margin-top:4px;font-weight:400}
+.wt-elapsed{font-size:13px;color:#888;margin-top:3px}
 .branch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .branch-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
 .bc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
@@ -121,6 +121,48 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 /* Multi-status picker */
 .status-opt.multi-selected{border-color:var(--accent);background:var(--surface2)}
 
+
+/* ── Analytics ── */
+.an-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.an-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);text-align:center}
+.an-kpi .val{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px}
+.an-kpi .lbl{font-size:11px;color:var(--text2)}
+.an-kpi .sub{font-size:10px;color:var(--text3);margin-top:2px}
+.an-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.an-section h3{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.bar-row .br-name{width:130px;flex-shrink:0;text-align:right;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .br-bar-wrap{flex:1;background:var(--surface2);border-radius:4px;height:18px;overflow:hidden}
+.bar-row .br-bar{height:100%;border-radius:4px;transition:width .4s ease;display:flex;align-items:center;padding-right:6px;font-size:10px;font-weight:600;color:#fff;justify-content:flex-end}
+.bar-row .br-val{width:60px;flex-shrink:0;color:var(--text2);text-align:left}
+.clock-grid{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin-bottom:6px}
+.clock-cell{height:28px;border-radius:3px;position:relative;cursor:default}
+.clock-cell:hover::after{content:attr(data-tip);position:absolute;bottom:110%;right:50%;transform:translateX(50%);background:#333;color:#fff;padding:3px 7px;border-radius:5px;font-size:10px;white-space:nowrap;z-index:10}
+.clock-labels{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;font-size:9px;color:var(--text3);text-align:center;margin-bottom:16px}
+.insight-card{background:linear-gradient(135deg,#1B4F72,#2E86C1);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:10px}
+.insight-card .i-title{font-size:12px;opacity:.8;margin-bottom:4px}
+.insight-card .i-body{font-size:14px;font-weight:500;line-height:1.5}
+.day-summary-table{width:100%;border-collapse:collapse;font-size:12px}
+.day-summary-table th{text-align:right;padding:7px 10px;border-bottom:2px solid var(--border);font-weight:600;font-size:11px;color:var(--text2)}
+.day-summary-table td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.day-summary-table tr:last-child td{border-bottom:none}
+.day-summary-table tr:hover td{background:var(--surface2)}
+.an-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:700px){.an-two-col{grid-template-columns:1fr}}
+
+
+/* drill-down */
+.drill-row{cursor:pointer;transition:background .12s}
+.drill-row:hover td{background:#EBF5FB!important}
+.drill-detail{display:none;background:#F8FBFF}
+.drill-detail.open{display:table-row-group}
+.drill-inner{padding:0 10px 10px 10px}
+.drill-inner table{width:100%;border-collapse:collapse;font-size:11px}
+.drill-inner table th{padding:5px 8px;background:#E3F2FD;color:#1565C0;font-weight:600;text-align:right;border-bottom:1px solid #BBDEFB}
+.drill-inner table td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+.chevron{display:inline-block;transition:transform .2s;margin-left:5px;font-size:10px}
+.chevron.open{transform:rotate(90deg)}
+
 .hidden{display:none!important}
 .mt12{margin-top:12px}
 .chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)}
@@ -169,6 +211,10 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       <span class="nav-item-label">דוחות</span>
     </button>
+    <button class="nav-item" onclick="showPage('analytics')" id="nav-analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nav-item-label">אנליטיקה</span>
+    </button>
     <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span class="nav-item-label">הגדרות</span>
@@ -203,6 +249,10 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
           כרטיסיות
         </button>
       </div>
+      <button class="btn" onclick="showPage('analytics')" style="font-size:12px;font-weight:500">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        אנליטיקה
+      </button>
       <button class="btn btn-wa" onclick="openWAModal()">
         <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.122 1.524 5.858L0 24l6.335-1.524A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 0 1-5.003-1.368l-.36-.213-3.728.896.928-3.634-.235-.373A9.77 9.77 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
         WhatsApp
@@ -239,7 +289,7 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
     </div>
     <div class="summary-strip" id="report-summary"></div>
     <div class="tbl-wrap mt12">
-      <table class="rtable"><thead><tr><th>סניף</th><th>סטטוס</th><th>הערה</th><th>תחילה</th><th>סיום</th><th>משך</th></tr></thead>
+      <table class="rtable"><thead><tr><th>סניף</th><th>סטטוס</th><th>הערה</th><th>כניסה לסטטוס</th><th>חזרה לשגרה</th><th>משך</th></tr></thead>
       <tbody id="report-body"></tbody></table>
     </div>
   </div>
@@ -266,6 +316,16 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
         <button class="btn btn-primary" onclick="addStatusDef()">הוסף</button>
       </div>
     </div>
+    <div class="settings-section" style="border-color:#F09595">
+      <h3 style="color:#b71c1c">🧹 ניקוי נתוני בדיקה</h3>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">ניקוי רשומות בדיקה ורשומות שהסטטוס שלהן נמחק.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-danger" onclick="cleanupZeroLogs()" id="cleanup-btn">🗑️ מחק רשומות עם משך 0</button>
+        <button class="btn btn-danger" onclick="cleanupOrphanLogs()" id="cleanup-orphan-btn">🧹 מחק רשומות יתום</button>
+        <span id="cleanup-result" style="font-size:13px;color:var(--text2)"></span>
+      </div>
+    </div>
+
     <div class="settings-section">
       <h3>WhatsApp</h3>
       <div class="field"><label>מספרים לשליחה (מופרדים בפסיק)</label><input type="text" id="wa-numbers" placeholder="0521234567, 0529876543"></div>
@@ -274,6 +334,42 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
     </div>
   </div>
 </div>
+
+<!-- ANALYTICS -->
+<div id="page-analytics" class="hidden">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn" onclick="openSidebar()" style="padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div><div class="topbar-title">דשבורד אנליטיקה</div><div class="topbar-sub" id="analytics-sub">—</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <!-- Period tabs -->
+      <div class="view-toggle" id="period-toggle">
+        <button class="vbtn active" onclick="setPeriod('yesterday')">אתמול</button>
+        <button class="vbtn" onclick="setPeriod('week')">שבוע</button>
+        <button class="vbtn" onclick="setPeriod('month')">חודש</button>
+        <button class="vbtn" onclick="setPeriod('custom')">מותאם</button>
+      </div>
+      <div id="custom-dates" style="display:none;gap:6px;align-items:center;display:none">
+        <input type="date" id="an-from" style="padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:12px">
+        <span style="color:var(--text3)">עד</span>
+        <input type="date" id="an-to" style="padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:12px">
+        <button class="btn btn-sm btn-primary" onclick="renderAnalytics()">הצג</button>
+      </div>
+      <!-- Filters -->
+      <select id="an-filter-type" onchange="renderAnalytics()" style="padding:5px 9px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:12px;background:var(--surface)">
+        <option value="all">כולם</option>
+        <option value="temporary">זמניים בלבד</option>
+        <option value="permanent">קבועים בלבד</option>
+        <option value="exclude-permanent">ללא קבועים</option>
+      </select>
+    </div>
+  </div>
+  <div class="content" id="analytics-content">
+    <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><p>טוען נתונים...</p></div>
+  </div>
+</div>
+
 
 </main>
 </div>
@@ -431,7 +527,10 @@ function elapsed(ts) {
   return fmtDuration(Date.now()-d.getTime());
 }
 function statusById(id) {
-  return window._state.statuses.find(s=>s.id===id)||{label:id,color:'#ccc'};
+  const found = window._state.statuses.find(s=>s.id===id);
+  if(found) return found;
+  // Fallback: show shortened ID to indicate orphan status
+  return {label:'[' + (id||'?').slice(0,6) + '...]', color:'#999', textColor:'#fff'};
 }
 function contrastText(hex) {
   if(!hex||hex.length<7) return '#000';
@@ -507,24 +606,34 @@ window._db = {
     }
   },
   async updateActive(id, statusId, note, isPermanent) {
-    const now = serverTimestamp();
+    const nowTs = Timestamp.now();
+    const nowServer = serverTimestamp();
     const logsSnap = await getDocs(query(logsCol));
-    const openLog = logsSnap.docs.find(d=>d.data().eventId===id && d.data().endedAt===null);
-    if(openLog) {
-      const startMs = openLog.data().startedAt?.toDate?.()?.getTime()||Date.now();
-      await updateDoc(doc(db,'status_logs',openLog.id), { endedAt:now, durationMinutes: Math.round((Date.now()-startMs)/60000) });
+    const openLogs = logsSnap.docs.filter(d=>d.data().eventId===id && !d.data().endedAt);
+    for(const openLog of openLogs) {
+      const startMs = openLog.data().startedAt?.toDate?.()?.getTime() || nowTs.toMillis();
+      const dur = Math.max(0, Math.round((nowTs.toMillis()-startMs)/60000));
+      await updateDoc(doc(db,'status_logs',openLog.id), { endedAt: nowServer, durationMinutes: dur });
     }
-    await updateDoc(doc(db,'active_events',id), { currentStatus:statusId, note, isPermanent:!!isPermanent, statusChangedAt:now });
+    await updateDoc(doc(db,'active_events',id), { currentStatus:statusId, note, isPermanent:!!isPermanent, statusChangedAt:nowServer });
     const ev = window._state.active.find(a=>a.id===id);
-    await addDoc(logsCol, { eventId:id, branchName:ev?.branchName||'', statusId, note, isPermanent:!!isPermanent, startedAt:now, endedAt:null });
+    await addDoc(logsCol, { eventId:id, branchName:ev?.branchName||'', statusId, note, isPermanent:!!isPermanent, startedAt:nowServer, endedAt:null });
   },
   async restore(id, note) {
-    const now = serverTimestamp();
+    // Use client-side timestamp for endedAt so durationMinutes is accurate
+    const nowTs = Timestamp.now();
+    const nowServer = serverTimestamp();
     const logsSnap = await getDocs(query(logsCol));
-    const openLog = logsSnap.docs.find(d=>d.data().eventId===id && d.data().endedAt===null);
-    if(openLog) {
-      const startMs = openLog.data().startedAt?.toDate?.()?.getTime()||Date.now();
-      await updateDoc(doc(db,'status_logs',openLog.id), { endedAt:now, durationMinutes: Math.round((Date.now()-startMs)/60000) });
+    // Close ALL open logs for this event (in case of multi-status edge cases)
+    const openLogs = logsSnap.docs.filter(d=>d.data().eventId===id && !d.data().endedAt);
+    for(const openLog of openLogs) {
+      const startMs = openLog.data().startedAt?.toDate?.()?.getTime() || nowTs.toMillis();
+      const dur = Math.max(0, Math.round((nowTs.toMillis()-startMs)/60000));
+      await updateDoc(doc(db,'status_logs',openLog.id), {
+        endedAt: nowServer,
+        durationMinutes: dur,
+        closedNote: note || 'חזרה לשגרה'
+      });
     }
     await deleteDoc(doc(db,'active_events',id));
   },
@@ -534,6 +643,51 @@ window._db = {
   async updateStatus(id, label, color) { await updateDoc(doc(db,'statuses',id), { label, color }); },
   async deleteStatus(id) { await deleteDoc(doc(db,'statuses',id)); },
   async saveSettings(data) { await setDoc(settingsDoc, data, { merge:true }); },
+
+  // Cleanup: delete all logs with durationMinutes === 0 or null (test data)
+  async cleanupZeroLogs() {
+    const snap = await getDocs(query(logsCol));
+    let deleted = 0;
+    for(const d of snap.docs) {
+      const dur = d.data().durationMinutes;
+      if(dur === 0 || dur === null || dur === undefined) {
+        await deleteDoc(doc(db,'status_logs',d.id));
+        deleted++;
+      }
+    }
+    return deleted;
+  },
+
+  // Cleanup: delete logs whose statusId doesn't match any known status
+  async cleanupOrphanLogs() {
+    const [logsSnap, statusesSnap] = await Promise.all([
+      getDocs(query(logsCol)),
+      getDocs(collection(db,'statuses'))
+    ]);
+    const knownIds = new Set(statusesSnap.docs.map(d => d.id));
+    let deleted = 0;
+    for(const d of logsSnap.docs) {
+      const sid = d.data().statusId;
+      if(!sid || !knownIds.has(sid)) {
+        await deleteDoc(doc(db,'status_logs',d.id));
+        deleted++;
+      }
+    }
+    // Also clean active_events with orphan status
+    const activeSnap = await getDocs(collection(db,'active_events'));
+    for(const d of activeSnap.docs) {
+      const sid = d.data().currentStatus;
+      if(!sid || !knownIds.has(sid)) {
+        await deleteDoc(doc(db,'active_events',d.id));
+        deleted++;
+      }
+    }
+    return deleted;
+  },
+
+  async deleteStatusAndLogs(id) {
+    await deleteDoc(doc(db,'statuses',id));
+  },
 };
 
 // ─── Expose to global scope ───
@@ -556,12 +710,14 @@ let currentView = 'table';
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 
 function showPage(name) {
-  ['dashboard','reports','settings'].forEach(p=>{
+  ['dashboard','reports','settings','analytics'].forEach(p=>{
     document.getElementById('page-'+p).classList.toggle('hidden',p!==name);
-    document.getElementById('nav-'+p).classList.toggle('active',p===name);
+    const navEl = document.getElementById('nav-'+p);
+    if(navEl) navEl.classList.toggle('active',p===name);
   });
   if(name==='reports'){ populateReportFilters(); renderReports(); }
   if(name==='settings') renderSettings();
+  if(name==='analytics') renderAnalytics();
   closeSidebar();
 }
 
@@ -818,8 +974,8 @@ function renderWarroomTable() {
         const permLabel=b.isPermanent?`<span class="perm-badge permanent">📌 קבוע</span>`:`<span class="perm-badge temporary">⏱ זמני</span>`;
         tbody+=`<td id="wt-cell-${b.id}" style="font-weight:600;${cellStyle}">
           <div style="display:flex;align-items:center;justify-content:center;gap:5px">
-            <span class="urgency-icon" style="font-size:14px">${u.label||''}</span>
-            <span>${b.branchName}</span>
+            <span class="urgency-icon" style="font-size:16px">${u.label||''}</span>
+            <span style="font-size:17px;font-weight:700">${b.branchName}</span>
           </div>
           ${permLabel}
           ${b.note?`<div class="wt-note">${b.note}</div>`:''}
@@ -917,15 +1073,15 @@ function renderReports() {
           <td><span class="badge" style="background:${st.color}22;color:${st.color}">${st.label}</span></td>
           <td style="color:var(--text2)">${l.note||'—'}</td>
           <td>${window._fmtTime(l.startedAt)}</td>
-          <td>${endedAt?window._fmtTime(l.endedAt):'<span style="color:#e53935">פעיל</span>'}</td>
-          <td><strong>${l.durationMinutes!=null?l.durationMinutes+"דק'":'פעיל'}</strong></td>
+          <td>${endedAt?window._fmtTime(l.endedAt):'<span style="color:#e53935">טרם נסגר</span>'}</td>
+          <td><strong>${l.durationMinutes!=null?l.durationMinutes+"דק'":'טרם נסגר'}</strong></td>
         </tr>`;
       }).join('')
     : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">אין נתונים</td></tr>';
 }
 function exportCSV() {
-  const header="סניף,סטטוס,הערה,תחילה,סיום,משך (דק')\n";
-  const rows=window._state.logs.map(l=>`${l.branchName},${window._statusById(l.statusId).label},${l.note||''},${window._fmtTime(l.startedAt)},${l.endedAt?window._fmtTime(l.endedAt):'פעיל'},${l.durationMinutes||0}`).join('\n');
+  const header="סניף,סטטוס,הערה,כניסה לסטטוס,חזרה לשגרה,משך (דק')\n";
+  const rows=window._state.logs.map(l=>`${l.branchName},${window._statusById(l.statusId).label},${l.note||''},${window._fmtTime(l.startedAt)},${l.endedAt?window._fmtTime(l.endedAt):'טרם נסגר'},${l.durationMinutes||0}`).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(header+rows);
   a.download='report_'+new Date().toLocaleDateString('he-IL').replace(/\./g,'-')+'.csv';
@@ -939,13 +1095,19 @@ function renderSettings() {
     ? branches.map(b=>`<div class="list-item"><span style="font-weight:500">${b.name}</span><button class="btn btn-sm btn-danger" onclick="deleteBranchDef('${b.id}','${b.name}')">מחק</button></div>`).join('')
     : '<div style="color:var(--text3);font-size:13px;padding:6px 0">אין סניפים</div>';
 
-  document.getElementById('settings-statuses-list').innerHTML=statuses.map((s,i)=>`
-    <div class="st-row">
-      <div class="st-color-swatch" style="background:${s.color}" onclick="document.getElementById('sc-${i}').click()"></div>
-      <input type="color" id="sc-${i}" value="${s.color}" style="display:none" onchange="window._db.updateStatus('${s.id}',document.getElementById('sl-${i}').value,this.value)">
-      <input type="text" id="sl-${i}" value="${s.label}" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:var(--surface);color:var(--text)" onblur="window._db.updateStatus('${s.id}',this.value,document.getElementById('sc-${i}').value)">
-      <button class="btn btn-sm btn-danger" onclick="deleteStatusDef('${s.id}','${s.label}')">מחק</button>
-    </div>`).join('');
+  document.getElementById('settings-statuses-list').innerHTML=statuses.map((s,i)=>{
+    const isOrphan = !s.label || s.label.trim()==='' || s.id===s.label;
+    const displayLabel = isOrphan ? '[יתום: '+s.id.slice(0,10)+'...]' : s.label;
+    const rowStyle = isOrphan ? 'background:#fff8f0;border:1px solid #f5a623;border-radius:6px;padding:8px;margin-bottom:4px' : '';
+    const orphanTag = isOrphan ? '<span style="font-size:10px;background:#f5a623;color:#fff;padding:2px 6px;border-radius:10px;margin-left:6px">יתום</span>' : '';
+    return `<div class="st-row" style="${rowStyle}">
+      <div class="st-color-swatch" style="background:${s.color||'#ccc'}" onclick="document.getElementById('sc-${i}').click()"></div>
+      <input type="color" id="sc-${i}" value="${s.color||'#cccccc'}" style="display:none" onchange="window._db.updateStatus('${s.id}',document.getElementById('sl-${i}').value,this.value)">
+      <input type="text" id="sl-${i}" value="${displayLabel}" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:var(--surface);color:${isOrphan?'#b45300':'var(--text)'}" onblur="window._db.updateStatus('${s.id}',this.value,document.getElementById('sc-${i}').value)">
+      ${orphanTag}
+      <button class="btn btn-sm btn-danger" onclick="deleteStatusDef('${s.id}','${displayLabel}')">מחק</button>
+    </div>`;
+  }).join('');
 
   document.getElementById('wa-numbers').value=window._state.settings.waNumbers||'';
   document.getElementById('wa-sender').value=window._state.settings.waSender||'מוקד אלגד';
@@ -973,9 +1135,40 @@ function addStatusDef() {
 function deleteStatusDef(id, label) {
   if(window._state.statuses.length<=1){alert('חייב להישאר לפחות סטטוס אחד');return;}
   if(window._state.active.find(b=>b.currentStatus===id)){alert('לא ניתן — יש סניפים פעילים בסטטוס זה');return;}
-  if(!confirm('למחוק "'+label+'"?')) return;
+  const name = (label&&label.trim()) ? label : '[יתום: '+id.slice(0,10)+'...]';
+  if(!confirm('למחוק "'+name+'"?')) return;
   window._db.deleteStatus(id);
 }
+async function cleanupZeroLogs() {
+  const btn = document.getElementById('cleanup-btn');
+  const res = document.getElementById('cleanup-result');
+  if(!confirm('למחוק את כל הרשומות עם משך 0? פעולה זו אינה הפיכה.')) return;
+  btn.disabled = true; btn.textContent = '⏳ מנקה...'; res.textContent = '';
+  try {
+    const deleted = await window._db.cleanupZeroLogs();
+    btn.textContent = '🗑️ מחק רשומות עם משך 0'; btn.disabled = false;
+    res.textContent = `✅ נמחקו ${deleted} רשומות`; res.style.color = '#2E7D32';
+  } catch(e) {
+    btn.textContent = '🗑️ מחק רשומות עם משך 0'; btn.disabled = false;
+    res.textContent = '❌ שגיאה: ' + e.message; res.style.color = '#b71c1c';
+  }
+}
+
+async function cleanupOrphanLogs() {
+  const btn = document.getElementById('cleanup-orphan-btn');
+  const res = document.getElementById('cleanup-result');
+  if(!confirm('למחוק את כל הרשומות שהסטטוס שלהן לא קיים? (הרשומות עם [...t6AGEK] וכד\'). פעולה זו אינה הפיכה.')) return;
+  btn.disabled = true; btn.textContent = '⏳ מנקה...'; res.textContent = '';
+  try {
+    const deleted = await window._db.cleanupOrphanLogs();
+    btn.textContent = '🧹 מחק רשומות יתום'; btn.disabled = false;
+    res.textContent = `✅ נמחקו ${deleted} רשומות יתום`; res.style.color = '#2E7D32';
+  } catch(e) {
+    btn.textContent = '🧹 מחק רשומות יתום'; btn.disabled = false;
+    res.textContent = '❌ שגיאה: ' + e.message; res.style.color = '#b71c1c';
+  }
+}
+
 function saveWASettings() {
   const data={waNumbers:document.getElementById('wa-numbers').value.trim(),waSender:document.getElementById('wa-sender').value.trim()||'מוקד אלגד'};
   window._db.saveSettings(data);
@@ -1055,6 +1248,338 @@ function closeSidebar() {
   document.getElementById('sidebar-overlay').classList.remove('open');
   document.body.style.overflow = '';
 }
+
+
+// ════════════════════════════════
+// ──── ANALYTICS ENGINE ────
+// ════════════════════════════════
+
+let anPeriod = 'yesterday';
+
+function setPeriod(p) {
+  anPeriod = p;
+  document.querySelectorAll('#period-toggle .vbtn').forEach((b,i)=>{
+    b.classList.toggle('active', ['yesterday','week','month','custom'][i]===p);
+  });
+  const cd = document.getElementById('custom-dates');
+  cd.style.display = p==='custom' ? 'flex' : 'none';
+  if(p !== 'custom') renderAnalytics();
+}
+
+function getPeriodRange() {
+  const now = new Date();
+  let from, to;
+  if(anPeriod === 'yesterday') {
+    from = new Date(now); from.setDate(from.getDate()-1); from.setHours(0,0,0,0);
+    to   = new Date(now); to.setDate(to.getDate()-1);     to.setHours(23,59,59,999);
+  } else if(anPeriod === 'week') {
+    from = new Date(now); from.setDate(from.getDate()-7); from.setHours(0,0,0,0);
+    to   = new Date(now); to.setHours(23,59,59,999);
+  } else if(anPeriod === 'month') {
+    from = new Date(now); from.setDate(from.getDate()-30); from.setHours(0,0,0,0);
+    to   = new Date(now); to.setHours(23,59,59,999);
+  } else {
+    const fv = document.getElementById('an-from').value;
+    const tv = document.getElementById('an-to').value;
+    from = fv ? new Date(fv) : new Date(now.getTime() - 86400000);
+    to   = tv ? new Date(tv+'T23:59:59') : new Date();
+  }
+  return { from, to };
+}
+
+function getFilteredLogs() {
+  const { from, to } = getPeriodRange();
+  const typeFilter = document.getElementById('an-filter-type')?.value || 'all';
+  return window._state.logs.filter(l => {
+    const ts = l.startedAt?.toDate?.() || new Date(0);
+    if(ts < from || ts > to) return false;
+    if(typeFilter === 'temporary' && l.isPermanent) return false;
+    if(typeFilter === 'permanent' && !l.isPermanent) return false;
+    if(typeFilter === 'exclude-permanent' && l.isPermanent) return false;
+    return true;
+  });
+}
+
+function fmtMin(min) {
+  if(!min || min < 1) return "0 דק'";
+  if(min < 60) return Math.round(min) + " דק'";
+  const h = Math.floor(min/60), m = Math.round(min%60);
+  return h + "ש'" + (m ? ' ' + m + "דק'" : '');
+}
+
+function renderAnalytics() {
+  const logs = getFilteredLogs();
+  const { from, to } = getPeriodRange();
+  const typeFilter = document.getElementById('an-filter-type')?.value || 'all';
+
+  const periodLabels = { yesterday:'אתמול', week:'7 ימים אחרונים', month:'30 ימים אחרונים', custom:'טווח מותאם' };
+  document.getElementById('analytics-sub').textContent = periodLabels[anPeriod] + ' · ' + logs.length + ' אירועים';
+
+  if(!logs.length) {
+    document.getElementById('analytics-content').innerHTML =
+      '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><p>אין נתונים לתקופה הנבחרת</p></div>';
+    return;
+  }
+
+  // ── KPIs ──
+  const totalEvents = logs.length;
+  const totalMinutes = logs.reduce((a,l) => a + (l.durationMinutes||0), 0);
+  const uniqueBranches = new Set(logs.map(l=>l.branchName)).size;
+  const avgMin = totalEvents ? totalMinutes/totalEvents : 0;
+  const longestLog = logs.reduce((mx,l) => (l.durationMinutes||0) > (mx.durationMinutes||0) ? l : mx, logs[0]);
+  const permanentCount = logs.filter(l=>l.isPermanent).length;
+
+  // ── Top 10 branches with per-status breakdown ──
+  const byBranch = {};
+  logs.forEach(l => {
+    if(!byBranch[l.branchName]) byBranch[l.branchName] = { count:0, minutes:0, byStatus:{} };
+    byBranch[l.branchName].count++;
+    byBranch[l.branchName].minutes += l.durationMinutes||0;
+    if(!byBranch[l.branchName].byStatus[l.statusId]) byBranch[l.branchName].byStatus[l.statusId]={count:0,minutes:0,events:[]};
+    byBranch[l.branchName].byStatus[l.statusId].count++;
+    byBranch[l.branchName].byStatus[l.statusId].minutes += l.durationMinutes||0;
+    byBranch[l.branchName].byStatus[l.statusId].events.push(l);
+  });
+  const top10 = Object.entries(byBranch).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
+  const maxCount = top10[0]?.[1]?.count || 1;
+
+  // ── Top statuses with per-branch drill ──
+  const bySt = {};
+  logs.forEach(l => {
+    if(!bySt[l.statusId]) bySt[l.statusId] = { count:0, minutes:0, branches:{} };
+    bySt[l.statusId].count++;
+    bySt[l.statusId].minutes += l.durationMinutes||0;
+    if(!bySt[l.statusId].branches[l.branchName]) bySt[l.statusId].branches[l.branchName]={count:0,minutes:0,events:[]};
+    bySt[l.statusId].branches[l.branchName].count++;
+    bySt[l.statusId].branches[l.branchName].minutes += l.durationMinutes||0;
+    bySt[l.statusId].branches[l.branchName].events.push(l);
+  });
+  const topSt = Object.entries(bySt).sort((a,b)=>b[1].count-a[1].count);
+
+  // ── Hourly heatmap ──
+  const hourly = Array(24).fill(0);
+  logs.forEach(l => {
+    const h = l.startedAt?.toDate?.()?.getHours();
+    if(h !== undefined) hourly[h]++;
+  });
+  const maxHourly = Math.max(...hourly, 1);
+
+  // ── Daily breakdown with per-branch events ──
+  const byDay = {};
+  logs.forEach(l => {
+    const d = l.startedAt?.toDate?.()?.toLocaleDateString('he-IL') || '?';
+    if(!byDay[d]) byDay[d] = { count:0, minutes:0, branches:{} };
+    byDay[d].count++;
+    byDay[d].minutes += l.durationMinutes||0;
+    if(!byDay[d].branches[l.branchName]) byDay[d].branches[l.branchName]={events:[]};
+    byDay[d].branches[l.branchName].events.push(l);
+  });
+  const dayRows = Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,14);
+
+  // ── Insights engine ──
+  const insights = [];
+  if(top10[0]) insights.push({ title:'סניף עם הכי הרבה אירועים', body:`${top10[0][0]} — ${top10[0][1].count} פעמים (${fmtMin(top10[0][1].minutes)} סה"כ)` });
+  const peakHour = hourly.indexOf(Math.max(...hourly));
+  insights.push({ title:'שעת שיא לאירועים', body:`${peakHour}:00–${peakHour+1}:00 — ${hourly[peakHour]} אירועים` });
+  if(avgMin > 60) insights.push({ title:'⚠️ זמן ממוצע גבוה', body:`הממוצע לאירוע הוא ${fmtMin(avgMin)} — שקול לבדוק תהליכי סגירה מהירים יותר` });
+  if(permanentCount > totalEvents * 0.3) insights.push({ title:'📌 שיעור קבועים גבוה', body:`${permanentCount} מתוך ${totalEvents} אירועים (${Math.round(permanentCount/totalEvents*100)}%) מסומנים כקבועים` });
+  if(longestLog?.durationMinutes > 120) insights.push({ title:'🕐 האירוע הארוך ביותר', body:`${longestLog.branchName} — ${fmtMin(longestLog.durationMinutes)} (${window._statusById(longestLog.statusId)?.label||''})` });
+
+  // ── Build HTML ──
+  document.getElementById('analytics-content').innerHTML = `
+
+    <!-- KPIs -->
+    <div class="an-grid">
+      <div class="an-kpi"><div class="val" style="color:#1565C0">${totalEvents}</div><div class="lbl">סה"כ אירועים</div></div>
+      <div class="an-kpi"><div class="val" style="color:#1B5E20">${uniqueBranches}</div><div class="lbl">סניפים שונים</div></div>
+      <div class="an-kpi"><div class="val" style="color:#7B1FA2">${fmtMin(totalMinutes)}</div><div class="lbl">סה"כ זמן</div></div>
+      <div class="an-kpi"><div class="val" style="color:#E65100">${fmtMin(avgMin)}</div><div class="lbl">ממוצע לאירוע</div></div>
+      <div class="an-kpi"><div class="val" style="color:#1565C0">${permanentCount}</div><div class="lbl">קבועים</div><div class="sub">${totalEvents-permanentCount} זמניים</div></div>
+    </div>
+
+    <!-- Daily summary expanded — FIRST -->
+    <div class="an-section">
+      <h3>📅 סיכום יומי מפורט — לחץ על תאריך לפירוט הסגירות</h3>
+      <table class="day-summary-table" style="width:100%">
+        <thead><tr><th></th><th>תאריך</th><th>אירועים</th><th>סניפים</th><th>סה"כ זמן</th><th>ממוצע</th></tr></thead>
+        ${dayRows.map(([date,d],di)=>{
+          const branchCount = Object.keys(d.branches).length;
+          const detailRows = Object.entries(d.branches).map(([bname,bd])=>{
+            const evRows = bd.events.map(ev=>{
+              const st = window._statusById(ev.statusId);
+              const startTime = ev.startedAt?.toDate?.()?.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})||'—';
+              const endTime = ev.endedAt?.toDate?.()?.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})||'טרם נסגר';
+              return `<tr style="background:#F8FBFF">
+                <td style="padding-right:20px;color:var(--text2)">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${st.color};margin-left:5px"></span>
+                  ${st.label}
+                </td>
+                <td>${startTime}</td>
+                <td>${endTime}</td>
+                <td style="font-weight:500">${fmtMin(ev.durationMinutes||0)}</td>
+                <td><span style="font-size:10px;padding:1px 5px;border-radius:8px;background:${ev.isPermanent?'#E3F2FD':'#F3E5F5'};color:${ev.isPermanent?'#1565C0':'#6A1B9A'}">${ev.isPermanent?'קבוע':'זמני'}</span></td>
+                <td style="color:var(--text3);font-size:11px">${ev.note||''}</td>
+              </tr>`;
+            }).join('');
+            const brMin = bd.events.reduce((a,e)=>a+(e.durationMinutes||0),0);
+            return `<tr style="background:#EBF5FB">
+              <td colspan="6" style="padding:0">
+                <div class="drill-inner">
+                  <div style="font-weight:600;font-size:12px;padding:6px 0 4px;color:#1565C0">📍 ${bname} — ${bd.events.length} אירועים · ${fmtMin(brMin)}</div>
+                  <table>
+                    <thead><tr><th>סטטוס</th><th>כניסה לסטטוס</th><th>חזרה לשגרה</th><th>משך</th><th>סוג</th><th>הערה</th></tr></thead>
+                    <tbody>${evRows}</tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>`;
+          }).join('');
+          return `<tbody>
+            <tr class="drill-row" onclick="toggleDrill('day-${di}')">
+              <td style="width:20px;text-align:center"><span class="chevron" id="chev-day-${di}">▶</span></td>
+              <td style="font-weight:600">${date}</td>
+              <td style="text-align:center">${d.count}</td>
+              <td style="text-align:center">${branchCount}</td>
+              <td style="text-align:center">${fmtMin(d.minutes)}</td>
+              <td style="text-align:center">${fmtMin(d.minutes/Math.max(d.count,1))}</td>
+            </tr>
+            <tr><td colspan="6" style="padding:0">
+              <div id="day-${di}" style="display:none;overflow:hidden">
+                <table style="width:100%;border-collapse:collapse">${detailRows}</table>
+              </div>
+            </td></tr>
+          </tbody>`;
+        }).join('')}
+      </table>
+    </div>
+
+    <div class="an-two-col">
+
+      <!-- Top 10 branches with status drill -->
+      <div class="an-section">
+        <h3>🏆 טופ 10 סניפים — לחץ לפירוט לפי סטטוס</h3>
+        <table class="day-summary-table" style="width:100%">
+          <thead><tr><th></th><th>סניף</th><th>אירועים</th><th>זמן</th></tr></thead>
+          ${top10.map(([name,d],i)=>{
+            const colors=['#E53935','#EF6C00','#F9A825','#558B2F','#1565C0','#6A1B9A','#00838F','#37474F','#5D4037','#AD1457'];
+            const stRows = Object.entries(d.byStatus).sort((a,b)=>b[1].count-a[1].count).map(([sid,sd])=>{
+              const st = window._statusById(sid);
+              const evList = sd.events.map(ev=>{
+                const startTime = ev.startedAt?.toDate?.()?.toLocaleDateString('he-IL')+' '+
+                  (ev.startedAt?.toDate?.()?.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})||'');
+                return `<tr style="background:#F8FBFF">
+                  <td style="padding-right:16px;color:var(--text3)">${startTime}</td>
+                  <td>${fmtMin(ev.durationMinutes||0)}</td>
+                  <td style="font-size:10px;color:var(--text2)">${ev.note||''}</td>
+                </tr>`;
+              }).join('');
+              return `<tr style="background:#EBF5FB">
+                <td colspan="4" style="padding:0">
+                  <div class="drill-inner">
+                    <div style="font-weight:600;font-size:12px;padding:6px 0 4px">
+                      <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${st.color};margin-left:5px"></span>
+                      ${st.label} — ${sd.count} אירועים · ${fmtMin(sd.minutes)}
+                    </div>
+                    <table><thead><tr><th>תאריך ושעה</th><th>משך</th><th>הערה</th></tr></thead><tbody>${evList}</tbody></table>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('');
+            return `<tbody>
+              <tr class="drill-row" onclick="toggleDrill('br-${i}')">
+                <td style="width:20px;text-align:center"><span class="chevron" id="chev-br-${i}">▶</span></td>
+                <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${colors[i]};margin-left:5px"></span>${i+1}. ${name}</td>
+                <td style="text-align:center;font-weight:600">${d.count}</td>
+                <td style="text-align:center">${fmtMin(d.minutes)}</td>
+              </tr>
+              <tr><td colspan="4" style="padding:0">
+                <div id="br-${i}" style="display:none">
+                  <table style="width:100%;border-collapse:collapse">${stRows}</table>
+                </div>
+              </td></tr>
+            </tbody>`;
+          }).join('')}
+        </table>
+      </div>
+
+      <!-- Status drill-down -->
+      <div class="an-section">
+        <h3>📊 פילוח לפי סטטוס — לחץ לרשימת סניפים</h3>
+        <table class="day-summary-table" style="width:100%">
+          <thead><tr><th></th><th>סטטוס</th><th>כמות</th><th>%</th><th>סה"כ זמן</th></tr></thead>
+          ${topSt.map(([sid,data],si)=>{
+            const st = window._statusById(sid);
+            const pct = Math.round(data.count/totalEvents*100);
+            const branchRows = Object.entries(data.branches).sort((a,b)=>b[1].count-a[1].count).map(([bname,bd])=>{
+              const evList = bd.events.map(ev=>{
+                const startTime = ev.startedAt?.toDate?.()?.toLocaleDateString('he-IL')+' '+
+                  (ev.startedAt?.toDate?.()?.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})||'');
+                return `<tr style="background:#F8FBFF">
+                  <td style="padding-right:16px;color:var(--text3)">${startTime}</td>
+                  <td>${fmtMin(ev.durationMinutes||0)}</td>
+                  <td style="font-size:10px">${ev.isPermanent?'📌 קבוע':'⏱ זמני'}</td>
+                </tr>`;
+              }).join('');
+              return `<tr style="background:#EBF5FB"><td colspan="5" style="padding:0">
+                <div class="drill-inner">
+                  <div style="font-weight:600;font-size:12px;padding:6px 0 4px">📍 ${bname} — ${bd.count} פעמים · ${fmtMin(bd.minutes)}</div>
+                  <table><thead><tr><th>תאריך ושעה</th><th>משך</th><th>סוג</th></tr></thead><tbody>${evList}</tbody></table>
+                </div>
+              </td></tr>`;
+            }).join('');
+            return `<tbody>
+              <tr class="drill-row" onclick="toggleDrill('st-${si}')">
+                <td style="width:20px;text-align:center"><span class="chevron" id="chev-st-${si}">▶</span></td>
+                <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${st.color};margin-left:5px"></span>${st.label}</td>
+                <td style="text-align:center;font-weight:600">${data.count}</td>
+                <td style="text-align:center">${pct}%</td>
+                <td style="text-align:center">${fmtMin(data.minutes)}</td>
+              </tr>
+              <tr><td colspan="5" style="padding:0">
+                <div id="st-${si}" style="display:none">
+                  <table style="width:100%;border-collapse:collapse">${branchRows}</table>
+                </div>
+              </td></tr>
+            </tbody>`;
+          }).join('')}
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Hourly heatmap -->
+    <div class="an-section">
+      <h3>🕐 פעילות לפי שעה ביום</h3>
+      <div class="clock-grid">
+        ${hourly.map((v,h)=>{
+          const intensity = v/maxHourly;
+          const bg = intensity===0 ? '#F5F4F0' : `rgba(30,86,160,${0.15+intensity*0.85})`;
+          const textColor = intensity > 0.5 ? '#fff' : '#333';
+          return `<div class="clock-cell" style="background:${bg};color:${textColor};font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:600" title="${h}:00 — ${v} אירועים">${v||''}</div>`;
+        }).join('')}
+      </div>
+      <div class="clock-labels">${Array.from({length:24},(_,h)=>`<span>${h}</span>`).join('')}</div>
+    </div>
+
+    <!-- Insights — LAST -->
+    <div class="an-section">
+      <h3>💡 תובנות אוטומטיות</h3>
+      ${insights.map(i=>`<div class="insight-card"><div class="i-title">${i.title}</div><div class="i-body">${i.body}</div></div>`).join('')}
+    </div>
+
+  `;
+}
+
+function toggleDrill(id) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  // find chevron — id like 'day-0' → 'chev-day-0'
+  const chev = document.getElementById('chev-'+id);
+  if(chev) chev.style.transform = open ? '' : 'rotate(90deg)';
+}
+
 </script>
 </body>
 </html>
