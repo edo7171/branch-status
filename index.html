@@ -197,6 +197,155 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 }
 @keyframes pulse-badge{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
 
+
+/* ════════════════════════════════
+   MOBILE RESPONSIVE
+════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Sidebar: slide over, full height */
+  .sidebar {
+    width: 80vw !important;
+    max-width: 300px;
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    z-index: 50;
+    transform: translateX(100%);
+    transition: transform .25s ease;
+    box-shadow: -4px 0 20px rgba(0,0,0,.15);
+  }
+  .sidebar.open { transform: translateX(0) !important; }
+
+  /* Main: full width, no margin */
+  .main { margin-right: 0 !important; }
+
+  /* Topbar: tighter, allow wrap */
+  .topbar {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .topbar > div:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    width: 100%;
+  }
+
+  /* Hide text in topbar buttons, show only icons */
+  .topbar .btn { padding: 7px 9px; font-size: 0; }
+  .topbar .btn svg { width: 16px; height: 16px; }
+  .topbar .btn-primary { font-size: 13px; padding: 7px 14px; }
+  .topbar .btn-primary svg { width: 14px; height: 14px; }
+  .topbar .view-toggle { display: none; }
+
+  /* Content: less padding */
+  .content { padding: 12px; }
+
+  /* Summary strip: 2 cols on mobile */
+  .summary-strip { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+
+  /* Warroom table: scroll horizontally, compact cells */
+  .warroom-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .warroom-table th {
+    font-size: 13px !important;
+    padding: 10px 8px !important;
+    min-width: 130px !important;
+    white-space: nowrap;
+  }
+  .warroom-table td { padding: 0 !important; }
+  .warroom-table td > div:first-child { padding: 5px 6px 1px !important; }
+  .warroom-table td > div:last-child  { padding: 1px 6px 5px !important; font-size: 11px !important; }
+  .warroom-table td > div:first-child > div:first-child { font-size: 14px !important; }
+
+  /* pen/check icons bigger tap target on mobile */
+  .warroom-table span[onclick] { padding: 6px !important; }
+
+  /* Cards: single column */
+  .branch-grid { grid-template-columns: 1fr !important; }
+
+  /* Settings sections */
+  .settings-section { padding: 14px; }
+  .add-inline { flex-direction: column; }
+  .add-inline input { width: 100%; }
+
+  /* Reports table: scroll */
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .rtable th, .rtable td { padding: 7px 8px; font-size: 12px; white-space: nowrap; }
+
+  /* Task cards: full width comfortable */
+  .task-card { padding: 14px; }
+  .task-text { font-size: 14px; }
+  .task-actions { flex-wrap: wrap; }
+
+  /* Modals: full width */
+  .modal { width: 95vw !important; padding: 18px; }
+  .status-picker { grid-template-columns: 1fr !important; }
+
+  /* Analytics */
+  .an-two-col { grid-template-columns: 1fr !important; }
+  .cl-two-col { grid-template-columns: 1fr !important; }
+
+  /* Report filters: stack */
+  .report-filters { flex-direction: column; align-items: stretch; }
+  .report-filters select,
+  .report-filters input { width: 100%; }
+
+  /* Collapse btn: hide on mobile (table always full) */
+  .collapse-btn { display: none; }
+
+  /* Topbar title stays visible */
+  .topbar-title { font-size: 14px; }
+
+  /* Bottom nav bar for mobile */
+  .mobile-nav {
+    display: flex !important;
+  }
+}
+
+/* Mobile bottom nav bar */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 45;
+  padding: 4px 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mobile-nav button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--text2);
+  padding: 6px 4px;
+  cursor: pointer;
+  position: relative;
+}
+.mobile-nav button.active { color: var(--accent); }
+.mobile-nav button svg { width: 20px; height: 20px; }
+.mobile-nav button .mnav-badge {
+  position: absolute;
+  top: 2px; left: calc(50% + 6px);
+  width: 15px; height: 15px;
+  border-radius: 50%; background: #E53935;
+  color: #fff; font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Add bottom padding so content isn't hidden by nav */
+@media (max-width: 768px) {
+  .main { padding-bottom: 60px; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+
 .hidden{display:none!important}
 .mt12{margin-top:12px}
 .chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)}
@@ -485,6 +634,31 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
   </div>
 </div>
 </div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button onclick="mobileNav('dashboard')" id="mnav-dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    לוח
+  </button>
+  <button onclick="mobileNav('tasks')" id="mnav-tasks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span class="mnav-badge hidden" id="mnav-tasks-badge"></span>
+    משימות
+  </button>
+  <button onclick="mobileNav('analytics')" id="mnav-analytics">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    אנליטיקה
+  </button>
+  <button onclick="mobileNav('reports')" id="mnav-reports">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    דוחות
+  </button>
+  <button onclick="openSidebar()" id="mnav-menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    תפריט
+  </button>
+</nav>
 
 <!-- MODAL: Add Branch -->
 <div class="overlay" id="modal-add-branch">
@@ -1432,6 +1606,18 @@ async function cleanupOrphanLogs() {
   }
 }
 
+function mobileNav(page) {
+  showPage(page);
+  // Update active state
+  ['dashboard','tasks','analytics','reports'].forEach(p=>{
+    const btn = document.getElementById('mnav-'+p);
+    if(btn) btn.classList.toggle('active', p===page);
+  });
+}
+
+// Update mobile badge alongside desktop badge
+const _origUpdateBadge = typeof updateTasksBadge !== 'undefined' ? updateTasksBadge : null;
+
 function toggleCollapse() {
   const page = document.getElementById('page-dashboard');
   const content = document.getElementById('dash-content');
@@ -1920,7 +2106,7 @@ const PRI_CLASS  = { high:'high', med:'med', low:'low' };
 
 function updateTasksBadge() {
   const openCount = (window._state.tasks||[]).filter(x=>!x.done).length;
-  ['nav-tasks-badge','topbar-tasks-badge'].forEach(id=>{
+  ['nav-tasks-badge','topbar-tasks-badge','mnav-tasks-badge'].forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
     if(openCount > 0){
