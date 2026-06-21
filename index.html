@@ -163,6 +163,13 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 .chevron{display:inline-block;transition:transform .2s;margin-left:5px;font-size:10px}
 .chevron.open{transform:rotate(90deg)}
 
+.topbar-compact .topbar{padding:6px 24px;}
+.topbar-compact .topbar-title{font-size:13px;}
+.topbar-compact .topbar-sub{display:none;}
+.topbar-compact .vbtn span,.topbar-compact .btn span{display:none;}
+.content-compact{padding:6px 24px!important;}
+.content-compact .summary-strip{display:none!important;}
+.collapse-btn{transition:all .2s;}
 .hidden{display:none!important}
 .mt12{margin-top:12px}
 .chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:var(--surface2);color:var(--text2)}
@@ -233,6 +240,9 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:10px">
       <button class="btn" onclick="openSidebar()" style="padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <button class="btn collapse-btn" id="collapse-btn" onclick="toggleCollapse()" title="צמצם/הרחב" style="padding:6px 10px">
+        <svg id="collapse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><polyline points="18 15 12 9 6 15"/></svg>
+      </button>
       <div>
         <div class="topbar-title">לוח ניהול סניפים</div>
         <div class="topbar-sub" id="dash-sub">מתחבר...</div>
@@ -253,6 +263,14 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         אנליטיקה
       </button>
+      <button class="btn" onclick="exportTableImage()" title="ייצוא תמונה" style="padding:6px 10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        תמונה
+      </button>
+      <button class="btn" onclick="exportTablePDF()" title="ייצוא PDF עמוד אחד" style="padding:6px 10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        PDF
+      </button>
       <button class="btn btn-wa" onclick="openWAModal()">
         <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.122 1.524 5.858L0 24l6.335-1.524A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.797 9.797 0 0 1-5.003-1.368l-.36-.213-3.728.896.928-3.634-.235-.373A9.77 9.77 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
         WhatsApp
@@ -263,7 +281,7 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
       </button>
     </div>
   </div>
-  <div class="content">
+  <div class="content" id="dash-content">
     <div class="summary-strip" id="summary-strip"></div>
     <div id="view-table"><div class="warroom-wrap"><table class="warroom-table"><thead id="warroom-head"></thead><tbody id="warroom-body"></tbody></table></div></div>
     <div id="view-cards" class="hidden"><div class="branch-grid" id="branch-grid"></div></div>
@@ -894,7 +912,7 @@ function sendWA() {
 }
 function captureTable() {
   const btn=event.target; btn.textContent='⏳ מצלם...'; btn.disabled=true;
-  const tbl=document.getElementById('warroom-table');
+  const tbl=document.querySelector('.warroom-table');
   if(!tbl){alert('עבור לתצוגת טבלה תחילה');btn.textContent='📸 צלם';btn.disabled=false;return;}
   const s=document.createElement('script');
   s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
@@ -907,11 +925,111 @@ function captureTable() {
       const a=document.createElement('a');
       a.download='warroom_'+new Date().toLocaleDateString('he-IL').replace(/\./g,'-')+'.png';
       a.href=canvas.toDataURL('image/png'); a.click();
-      btn.textContent='✅ הורד! כעת שלח ב-WA'; btn.disabled=false;
+      btn.textContent='✅ הורד!'; btn.disabled=false;
     }).catch(e=>{alert('שגיאה: '+e.message);btn.textContent='📸 צלם';btn.disabled=false;});
   };
   s.onerror=()=>{alert('לא ניתן לטעון ספריה');btn.textContent='📸 צלם';btn.disabled=false;};
   document.head.appendChild(s);
+}
+
+// ── Export: full-screen screenshot ──
+function exportTableImage() {
+  if(currentView!=='table'){setView('table');setTimeout(exportTableImage,500);return;}
+  const wrap = document.querySelector('.warroom-wrap');
+  if(!wrap || !document.getElementById('warroom-body')?.children.length){
+    alert('עבור לתצוגת טבלה ובדוק שיש סניפים פעילים');return;
+  }
+  
+  function doCapture() {
+    // Temporarily expand all scroll containers for full capture
+    const scrollDivs = wrap.querySelectorAll('[style*="max-height"]');
+    const origStyles = [];
+    scrollDivs.forEach(d=>{origStyles.push(d.style.maxHeight);d.style.maxHeight='none';});
+    
+    html2canvas(wrap, {
+      scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false,
+      width: wrap.scrollWidth, height: wrap.scrollHeight,
+      windowWidth: wrap.scrollWidth + 40
+    }).then(canvas => {
+      scrollDivs.forEach((d,i)=>d.style.maxHeight=origStyles[i]);
+      const a = document.createElement('a');
+      a.download = 'warroom_full_' + new Date().toLocaleDateString('he-IL').replace(/\./g,'-') + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    }).catch(e=>alert('שגיאה: '+e.message));
+  }
+
+  if(typeof html2canvas === 'function') { doCapture(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onload = doCapture;
+  document.head.appendChild(s);
+}
+
+// ── Export: PDF single page landscape ──
+function exportTablePDF() {
+  if(currentView!=='table'){setView('table');setTimeout(exportTablePDF,500);return;}
+
+  const tbl = document.querySelector('.warroom-table');
+  if(!tbl || !document.getElementById('warroom-body')?.children.length){
+    alert('עבור לתצוגת טבלה ובדוק שיש סניפים פעילים');return;
+  }
+
+  // Clone table HTML and open in new window with print CSS
+  const tblHTML = tbl.outerHTML;
+  const date = new Date().toLocaleString('he-IL');
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>לוח סטטוס סניפים</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; direction: rtl; background: #fff; }
+  .header {
+    background: #1A1916; color: #fff; padding: 10px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .header h1 { font-size: 16px; }
+  .header span { font-size: 12px; opacity: .7; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th {
+    padding: 8px 10px; font-size: 12px; font-weight: 700;
+    text-align: center; border: 1px solid rgba(0,0,0,.2);
+  }
+  td { border: 1px solid #ddd; padding: 0; vertical-align: top; }
+  td > div:first-child { padding: 4px 8px 1px; }
+  td > div:last-child  { padding: 1px 8px 4px; font-size: 11px; color: #666; text-align: center; }
+  .btn, button, span[onclick] { display: none !important; }
+  tr:nth-child(even) td { background: #f9f9f9; }
+  @page { size: A4 landscape; margin: 8mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>לוח סטטוס סניפים — אלגד</h1>
+  <span>${date}</span>
+</div>
+${tblHTML}
+<div class="no-print" style="text-align:center;margin:20px">
+  <button onclick="window.print()" style="padding:10px 24px;font-size:14px;cursor:pointer;background:#1A1916;color:#fff;border:none;border-radius:6px">
+    🖨️ הדפס / שמור כ-PDF
+  </button>
+</div>
+<script>
+  // Auto-print after fonts load
+  window.onload = function() { setTimeout(function(){ window.print(); }, 600); };
+<\/script>
+</body>
+</html>`);
+  win.document.close();
 }
 
 // ─── Dashboard ───
@@ -955,43 +1073,72 @@ function renderWarroomTable() {
   const cols={};
   statuses.forEach(s=>cols[s.id]=[]);
   active.forEach(b=>{if(cols[b.currentStatus])cols[b.currentStatus].push(b);});
-  const maxRows=Math.max(1,...statuses.map(s=>cols[s.id].length));
 
+  const maxRows = Math.max(1, ...statuses.map(s=>cols[s.id].length));
+
+  // Header
   document.getElementById('warroom-head').innerHTML='<tr>'+statuses.map(s=>{
     const tc=window._contrastText(s.color);
-    return `<th style="background:${s.color};color:${tc}">${s.label}<br><span style="font-size:11px;font-weight:400;opacity:.8">${cols[s.id].length} סניפים</span></th>`;
+    return `<th style="background:${s.color};color:${tc};min-width:160px;font-size:15px;padding:12px 14px;border:1px solid rgba(0,0,0,.15)">
+      ${s.label}<br><span style="font-size:12px;font-weight:600;color:#000;opacity:1">${cols[s.id].length} סניפים</span>
+    </th>`;
   }).join('')+'</tr>';
 
-  let tbody='';
+  // SVG icons
+  const penSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15" style="vertical-align:middle"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const checkSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="3" width="17" height="17" style="vertical-align:middle"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+  let tbody = '';
   for(let i=0;i<maxRows;i++){
-    tbody+='<tr>';
+    tbody += '<tr>';
     statuses.forEach(s=>{
-      const b=cols[s.id][i];
+      const b = cols[s.id][i];
       if(b){
-        const u=urgencyStyle(b.statusChangedAt, b.isPermanent);
-        const addedTime=fmtAddedTime(b.statusChangedAt);
-        const cellStyle=u.bg?`background:${u.bg};border:2px solid ${u.border};`:'';
-        const permLabel=b.isPermanent?`<span class="perm-badge permanent">📌 קבוע</span>`:`<span class="perm-badge temporary">⏱ זמני</span>`;
-        tbody+=`<td id="wt-cell-${b.id}" style="font-weight:600;${cellStyle}">
-          <div style="display:flex;align-items:center;justify-content:center;gap:5px">
-            <span class="urgency-icon" style="font-size:16px">${u.label||''}</span>
-            <span style="font-size:17px;font-weight:700">${b.branchName}</span>
+        const u = urgencyStyle(b.statusChangedAt, b.isPermanent);
+        const addedTime = fmtAddedTime(b.statusChangedAt);
+        const bg = u.bg || (i%2===0 ? '#fff' : '#f9f9f9');
+        const rightBorder = u.border ? `border-right:4px solid ${u.border};` : '';
+        const elapsed = b.isPermanent
+          ? '📌 ' + addedTime
+          : addedTime + ' · ' + window._elapsed(b.statusChangedAt);
+        const elColor = (u.border && !b.isPermanent) ? u.border : '#777';
+        const urgencyIcon = u.label ? `<span style="margin-left:3px;font-size:13px">${u.label}</span>` : '';
+
+        tbody += `<td id="wt-cell-${b.id}"
+          style="background:${bg};${rightBorder}border:1px solid #ddd;padding:0;
+                 vertical-align:top;width:${Math.floor(100/statuses.length)}%">
+
+          <!-- שורה 1: שם סניף + כפתורי פעולה -->
+          <div style="display:flex;align-items:center;justify-content:space-between;
+                      padding:5px 10px 1px 10px;
+                      background:${u.bg ? u.bg : (i%2===0?'#fff':'#f9f9f9')}">
+            <div style="font-size:17px;font-weight:700;flex:1;text-align:center;color:#000">
+              ${urgencyIcon}${b.branchName}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <span onclick="openUpdateModal('${b.id}')"
+                style="cursor:pointer;color:#555;padding:2px;border-radius:4px;line-height:0"
+                title="עדכן סטטוס">${penSVG}</span>
+              <span onclick="openRestoreModal('${b.id}')"
+                style="cursor:pointer;padding:2px;border-radius:4px;line-height:0"
+                title="חזרה לשגרה">${checkSVG}</span>
+            </div>
           </div>
-          ${permLabel}
-          ${b.note?`<div class="wt-note">${b.note}</div>`:''}
-          <div class="wt-elapsed" style="${u.bg&&!b.isPermanent?'color:'+u.border+';font-weight:600':'color:#888'}">
-            ${b.isPermanent?'הוסף: '+addedTime:addedTime+' · '+window._elapsed(b.statusChangedAt)}
+          <!-- שורה 2: נתונים -->
+          <div style="padding:1px 10px 5px 10px;font-size:13px;color:#000;text-align:center;
+                      font-weight:${u.border&&!b.isPermanent?'700':'500'}">
+            ${b.note ? `<span style="color:#000">${b.note} · </span>` : ''}${elapsed}
           </div>
-          <div style="margin-top:5px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap">
-            <button class="btn btn-sm" onclick="openUpdateModal('${b.id}')">עדכן</button>
-            <button class="btn btn-sm btn-success" onclick="openRestoreModal('${b.id}')">שגרה</button>
-          </div></td>`;
-      } else { tbody+='<td style="color:#ddd"></td>'; }
+        </td>`;
+      } else {
+        tbody += `<td style="background:${i%2===0?'#fff':'#f9f9f9'};border:1px solid #ddd;"></td>`;
+      }
     });
-    tbody+='</tr>';
+    tbody += '</tr>';
   }
-  if(!tbody) tbody=`<tr><td colspan="${statuses.length}" style="text-align:center;padding:40px;color:#999">אין סניפים פעילים</td></tr>`;
-  document.getElementById('warroom-body').innerHTML=tbody;
+
+  if(!tbody) tbody=`<tr><td colspan="${statuses.length}" style="text-align:center;padding:60px;color:#999;font-size:16px">אין סניפים פעילים</td></tr>`;
+  document.getElementById('warroom-body').innerHTML = tbody;
 }
 
 function renderCards() {
@@ -1167,6 +1314,16 @@ async function cleanupOrphanLogs() {
     btn.textContent = '🧹 מחק רשומות יתום'; btn.disabled = false;
     res.textContent = '❌ שגיאה: ' + e.message; res.style.color = '#b71c1c';
   }
+}
+
+function toggleCollapse() {
+  const page = document.getElementById('page-dashboard');
+  const content = document.getElementById('dash-content');
+  const icon = document.getElementById('collapse-icon');
+  const isCompact = page.classList.toggle('topbar-compact');
+  content.classList.toggle('content-compact', isCompact);
+  // Flip arrow: up = expanded, down = collapsed
+  icon.setAttribute('points', isCompact ? '6 9 12 15 18 9' : '18 15 12 9 6 15');
 }
 
 function saveWASettings() {
