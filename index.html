@@ -598,6 +598,7 @@ const statusesCol  = collection(db, 'statuses');
 const activeCol    = collection(db, 'active_events');
 const logsCol      = collection(db, 'status_logs');
 const settingsDoc  = doc(db, 'settings', 'global');
+const tasksCol     = collection(db, 'tasks');
 
 // ─── Local state (synced from Firestore) ───
 window._state = {
@@ -686,6 +687,12 @@ function setupListeners() {
     if(!document.getElementById('page-reports').classList.contains('hidden')) renderReports();
   });
 
+  onSnapshot(query(tasksCol, orderBy('createdAt','desc')), snap => {
+    window._state.tasks = snap.docs.map(d=>({id:d.id,...d.data()}));
+    updateTasksBadge();
+    if(!document.getElementById('page-tasks')?.classList.contains('hidden')) renderTasks();
+  });
+
   onSnapshot(settingsDoc, snap => {
     if(snap.exists()) {
       window._state.settings = snap.data();
@@ -755,6 +762,20 @@ window._db = {
   async updateStatus(id, label, color) { await updateDoc(doc(db,'statuses',id), { label, color }); },
   async deleteStatus(id) { await deleteDoc(doc(db,'statuses',id)); },
   async saveSettings(data) { await setDoc(settingsDoc, data, { merge:true }); },
+
+  async addTask(text, priority, due) {
+    await addDoc(tasksCol, { text, priority, due:due||'', done:false,
+      createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
+  },
+  async updateTask(id, text, priority, due) {
+    await updateDoc(doc(db,'tasks',id), { text, priority, due:due||'', updatedAt:serverTimestamp() });
+  },
+  async toggleTask(id, done) {
+    await updateDoc(doc(db,'tasks',id), { done, updatedAt:serverTimestamp() });
+  },
+  async deleteTask(id) {
+    await deleteDoc(doc(db,'tasks',id));
+  },
 
   // Cleanup: delete all logs with durationMinutes === 0 or null (test data)
   async cleanupZeroLogs() {
@@ -1836,18 +1857,13 @@ function toggleDrill(id) {
 // ════════════════════════════════
 // ──── TASKS ────
 // ════════════════════════════════
-let tasks = JSON.parse(localStorage.getItem('algad_tasks_v1')||'[]');
 let editingTaskId = null;
 let taskFilter = 'all';
 let selectedPriority = 'high';
 
-function saveTasks() { localStorage.setItem('algad_tasks_v1', JSON.stringify(tasks)); }
-
-function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
-
 function openTaskModal(id) {
   editingTaskId = id||null;
-  const t = id ? tasks.find(x=>x.id===id) : null;
+  const t = id ? window._state.tasks.find(x=>x.id===id) : null;
   document.getElementById('task-modal-title').textContent = id ? 'עריכת משימה' : 'הוסף משימה';
   document.getElementById('task-text').value = t ? t.text : '';
   document.getElementById('task-due').value = t ? (t.due||'') : '';
@@ -1868,24 +1884,22 @@ function saveTask() {
   const text = document.getElementById('task-text').value.trim();
   if(!text){document.getElementById('task-text').focus();return;}
   const due = document.getElementById('task-due').value;
+  closeModal('modal-task');
   if(editingTaskId) {
-    const t = tasks.find(x=>x.id===editingTaskId);
-    if(t){ t.text=text; t.priority=selectedPriority; t.due=due; t.updatedAt=Date.now(); }
+    window._db.updateTask(editingTaskId, text, selectedPriority, due);
   } else {
-    tasks.unshift({ id:uid(), text, priority:selectedPriority, due, done:false, createdAt:Date.now(), updatedAt:Date.now() });
+    window._db.addTask(text, selectedPriority, due);
   }
-  saveTasks(); closeModal('modal-task'); renderTasks();
 }
 
 function markDone(id) {
-  const t = tasks.find(x=>x.id===id);
-  if(t){ t.done=!t.done; t.updatedAt=Date.now(); saveTasks(); renderTasks(); }
+  const t = window._state.tasks.find(x=>x.id===id);
+  if(t) window._db.toggleTask(id, !t.done);
 }
 
 function deleteTask(id) {
   if(!confirm('למחוק משימה זו?')) return;
-  tasks = tasks.filter(x=>x.id!==id);
-  saveTasks(); renderTasks();
+  window._db.deleteTask(id);
 }
 
 function setTaskFilter(f, btn) {
@@ -1897,14 +1911,15 @@ function setTaskFilter(f, btn) {
 
 function fmtDate(ts) {
   if(!ts) return '';
-  return new Date(ts).toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'2-digit'});
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'2-digit'});
 }
 
 const PRI_LABELS = { high:'⚡ דחוף', med:'⚠️ בינוני', low:'✅ נמוך' };
 const PRI_CLASS  = { high:'high', med:'med', low:'low' };
 
 function updateTasksBadge() {
-  const openCount = tasks.filter(x=>!x.done).length;
+  const openCount = (window._state.tasks||[]).filter(x=>!x.done).length;
   ['nav-tasks-badge','topbar-tasks-badge'].forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
@@ -1919,6 +1934,7 @@ function updateTasksBadge() {
 
 function renderTasks() {
   updateTasksBadge();
+  const tasks = window._state.tasks||[];
   let filtered = tasks.filter(t => {
     if(taskFilter==='open') return !t.done;
     if(taskFilter==='done') return t.done;
