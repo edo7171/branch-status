@@ -555,7 +555,11 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
     </div>
     <div class="settings-section" style="border-color:#F09595">
       <h3 style="color:#b71c1c">🧹 ניקוי נתוני בדיקה</h3>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">ניקוי רשומות בדיקה ורשומות שהסטטוס שלהן נמחק.</p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:10px">ניקוי רשומות בדיקה ורשומות שהסטטוס שלהן נמחק.</p>
+      <div style="margin-bottom:10px">
+        <button class="btn btn-sm" onclick="testDBConnection()" id="db-test-btn">🔌 בדוק חיבור ל-Firebase</button>
+        <span id="db-test-result" style="font-size:12px;margin-right:8px"></span>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-danger" onclick="cleanupZeroLogs()" id="cleanup-btn">🗑️ מחק רשומות עם משך 0</button>
         <button class="btn btn-danger" onclick="cleanupOrphanLogs()" id="cleanup-orphan-btn">🧹 מחק רשומות יתום</button>
@@ -752,7 +756,7 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
 
 <!-- Firebase SDKs -->
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {
   getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
   onSnapshot, getDocs, serverTimestamp, query, orderBy, Timestamp
@@ -767,7 +771,7 @@ const firebaseConfig = {
   appId: "1:437287525021:web:c344cb7d654b59a3589274"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
 // ─── Collections ───
@@ -780,7 +784,7 @@ const tasksCol     = collection(db, 'tasks');
 
 // ─── Local state (synced from Firestore) ───
 window._state = {
-  branches: [], statuses: [], active: [], logs: [],
+  branches: [], statuses: [], active: [], logs: [], tasks: [],
   settings: { waNumbers:'', waSender:'מוקד אלגד' }
 };
 
@@ -842,6 +846,12 @@ async function seedIfEmpty() {
 
 // ─── Realtime listeners ───
 function setupListeners() {
+  const onErr = (name) => (e) => {
+    console.error(name + ' listener error:', e.code, e.message);
+    if(e.code === 'failed-precondition') {
+      console.warn(name + ': needs Firestore index - falling back');
+    }
+  };
   onSnapshot(collection(db,'branches'), snap => {
     window._state.branches = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.name.localeCompare(b.name,'he'));
     if(document.getElementById('page-settings').classList.contains('hidden')===false) renderSettings();
@@ -865,8 +875,13 @@ function setupListeners() {
     if(!document.getElementById('page-reports').classList.contains('hidden')) renderReports();
   });
 
-  onSnapshot(query(tasksCol, orderBy('createdAt','desc')), snap => {
-    window._state.tasks = snap.docs.map(d=>({id:d.id,...d.data()}));
+  onSnapshot(tasksCol, snap => {
+    window._state.tasks = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>{
+        const ta = a.createdAt?.toDate?.()?.getTime?.()||0;
+        const tb = b.createdAt?.toDate?.()?.getTime?.()||0;
+        return tb - ta;
+      });
     updateTasksBadge();
     if(!document.getElementById('page-tasks')?.classList.contains('hidden')) renderTasks();
   });
@@ -883,12 +898,17 @@ function setupListeners() {
 // ─── Init ───
 async function init() {
   try {
+    document.querySelector('.loading-text').textContent = 'מתחבר ל-Firebase...';
     await seedIfEmpty();
     setupListeners();
     document.getElementById('loading-screen').classList.add('done');
   } catch(e) {
-    document.querySelector('.loading-text').textContent = 'שגיאת חיבור: '+e.message;
-    console.error(e);
+    const msg = e.code === 'permission-denied'
+      ? '⛔ Firebase Rules חוסמים גישה — עדכן Rules ל: allow read, write: if true'
+      : 'שגיאת חיבור: ' + e.message;
+    document.querySelector('.loading-text').innerHTML =
+      `<span style="color:#E53935">${msg}</span><br><small style="font-size:11px;color:#888">פתח את Console (F12) לפרטים</small>`;
+    console.error('Firebase init error:', e);
   }
 }
 
@@ -936,7 +956,14 @@ window._db = {
   },
   async addBranch(name, isFranchise=false) { await addDoc(branchesCol, { name, isFranchise:!!isFranchise, createdAt:serverTimestamp() }); },
   async deleteBranch(id) { await deleteDoc(doc(db,'branches',id)); },
-  async updateBranchType(id, isFranchise) { await updateDoc(doc(db,'branches',id), { isFranchise:!!isFranchise }); },
+  async updateBranchType(id, isFranchise) {
+    try { await updateDoc(doc(db,'branches',id), { isFranchise:!!isFranchise }); }
+    catch(e){ console.error('updateBranchType error:',e); alert('שגיאה בשמירה: '+e.message); }
+  },
+  async updateBranchCloseTime(id, closeTime) {
+    try { await updateDoc(doc(db,'branches',id), { closeTime }); }
+    catch(e){ console.error('updateBranchCloseTime error:',e); alert('שגיאה בשמירה: '+e.message); }
+  },
   async addStatus(label, color) { await addDoc(statusesCol, { label, color, sortOrder: window._state.statuses.length }); },
   async updateStatus(id, label, color) { await updateDoc(doc(db,'statuses',id), { label, color }); },
   async deleteStatus(id) { await deleteDoc(doc(db,'statuses',id)); },
@@ -1327,6 +1354,46 @@ ${tblHTML}
   win.document.close();
 }
 
+
+// ─── Branch elapsed time with open/close capping ───
+function calcBranchElapsed(b, closeTimeStr) {
+  const OPEN_HOUR = 11; // כל הסניפים נפתחים ב-11:00
+  const startTs = b.statusChangedAt?.toDate ? b.statusChangedAt.toDate() : new Date(b.statusChangedAt||0);
+  const now = new Date();
+
+  function parseCloseTime(dateRef, timeStr) {
+    const [hStr, mStr] = (timeStr||'23:00').split(':');
+    let h = parseInt(hStr)||23, m = parseInt(mStr)||0;
+    const d = new Date(dateRef);
+    d.setSeconds(0, 0);
+    if(h < OPEN_HOUR) { d.setDate(d.getDate() + 1); }
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+
+  const todayOpen = new Date(now);
+  todayOpen.setHours(OPEN_HOUR, 0, 0, 0);
+
+  // Build today's close time (could be after midnight)
+  const todayClose = parseCloseTime(now, closeTimeStr);
+
+  // Determine effective start: if status started before today's 11:00, cap to 11:00
+  let effectiveStart = new Date(startTs);
+  if(effectiveStart < todayOpen && now >= todayOpen) {
+    effectiveStart = new Date(todayOpen);
+  }
+
+  // Determine effective end: min(now, closeTime)
+  let effectiveEnd = new Date(now);
+  if(effectiveEnd > todayClose) {
+    effectiveEnd = new Date(todayClose);
+  }
+
+  // If effectiveEnd < effectiveStart (e.g. before open), show 0
+  const ms = Math.max(0, effectiveEnd.getTime() - effectiveStart.getTime());
+  return window._fmtDuration(ms);
+}
+
 // ─── Dashboard ───
 function renderDashboard() {
   const st=window._state;
@@ -1379,9 +1446,14 @@ function renderWarroomTable() {
     });
   });
 
-  // Build franchise lookup: branchName -> isFranchise
+  // Build franchise + closeTime lookup (also expose globally for tickTimers)
   const franchiseMap = {};
-  (window._state.branches||[]).forEach(b => { franchiseMap[b.name] = !!b.isFranchise; });
+  window._closeTimeMap = {};
+  const closeTimeMap = window._closeTimeMap;
+  (window._state.branches||[]).forEach(b => {
+    franchiseMap[b.name] = !!b.isFranchise;
+    closeTimeMap[b.name] = b.closeTime || '23:00';
+  });
 
   const maxRows = Math.max(1, ...statuses.map(s=>cols[s.id].length));
 
@@ -1409,7 +1481,7 @@ function renderWarroomTable() {
         const rightBorder = u.border ? `border-right:4px solid ${u.border};` : '';
         const elapsed = b.isPermanent
           ? '📌 ' + addedTime
-          : addedTime + ' · ' + window._elapsed(b.statusChangedAt);
+          : addedTime + ' · ' + calcBranchElapsed(b, closeTimeMap[b.branchName]||'23:00');
         const elColor = (u.border && !b.isPermanent) ? u.border : '#777';
         const urgencyIcon = u.label ? `<span style="margin-left:3px;font-size:13px">${u.label}</span>` : '';
 
@@ -1470,7 +1542,7 @@ function renderCards() {
           <div class="bc-name">${u.label?u.label+' ':''} ${b.branchName}</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:3px">${permLabel}</div>
           <div class="bc-elapsed" style="${u.border&&!b.isPermanent?'color:'+u.border+';font-weight:600':''}">
-            ${b.isPermanent?'הוסף: '+addedTime:'הוסף בשעה '+addedTime+' · לפני '+window._elapsed(b.statusChangedAt)}
+            ${b.isPermanent?'הוסף: '+addedTime:'הוסף בשעה '+addedTime+' · לפני '+calcBranchElapsed(b,(window._closeTimeMap||{})[b.branchName]||'23:00')}
           </div>
         </div>
         <span class="badge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}44">${st.label}</span>
@@ -1495,6 +1567,48 @@ function clearFilters(){
   ['filter-branch','filter-status','filter-from','filter-to'].forEach(id=>document.getElementById(id).value='');
   renderReports();
 }
+// Calculate capped duration for a log entry (same logic as calcBranchElapsed)
+function calcCappedDuration(l) {
+  const OPEN_HOUR = 11;
+  const closeTimeStr = (window._closeTimeMap||{})[l.branchName] || '23:00';
+
+  const startTs = l.startedAt?.toDate ? l.startedAt.toDate() : new Date(l.startedAt||0);
+  const endTs   = l.endedAt?.toDate   ? l.endedAt.toDate()   : null;
+
+  function parseCloseTime(dateRef, timeStr) {
+    const [hStr, mStr] = (timeStr||'23:00').split(':');
+    let h = parseInt(hStr)||23, m = parseInt(mStr)||0;
+    const d = new Date(dateRef);
+    if(h < OPEN_HOUR) d.setDate(d.getDate() + 1);
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+
+  // Day boundary: 11:00 on the date of startedAt
+  const dayOpen = new Date(startTs);
+  dayOpen.setHours(OPEN_HOUR, 0, 0, 0);
+
+  // Close time for that day
+  const dayClose = parseCloseTime(startTs, closeTimeStr);
+
+  // Effective start: if status started before 11:00, cap to 11:00
+  let effStart = new Date(startTs);
+  if(effStart < dayOpen) effStart = new Date(dayOpen);
+
+  // Effective end: actual close (endedAt) or dayClose if no endedAt or endedAt > dayClose
+  let effEnd;
+  if(endTs) {
+    effEnd = endTs > dayClose ? new Date(dayClose) : new Date(endTs);
+  } else {
+    // Still open - cap to dayClose or now, whichever is earlier
+    const now = new Date();
+    effEnd = now > dayClose ? new Date(dayClose) : new Date(now);
+  }
+
+  const ms = Math.max(0, effEnd.getTime() - effStart.getTime());
+  return Math.round(ms / 60000); // minutes
+}
+
 function renderReports() {
   const fb=document.getElementById('filter-branch').value;
   const fs=document.getElementById('filter-status').value;
@@ -1510,11 +1624,12 @@ function renderReports() {
     return true;
   });
 
+  // Use capped duration for all calculations
   const totals={};
   window._state.statuses.forEach(s=>totals[s.id]=0);
   rows.forEach(l=>{
-    const dur=(l.durationMinutes||0)*60000;
-    if(totals[l.statusId]!==undefined) totals[l.statusId]+=dur;
+    const cappedMin = calcCappedDuration(l);
+    if(totals[l.statusId]!==undefined) totals[l.statusId] += cappedMin * 60000;
   });
 
   document.getElementById('report-summary').innerHTML=window._state.statuses.map(s=>
@@ -1525,20 +1640,23 @@ function renderReports() {
     ? rows.map(l=>{
         const st=window._statusById(l.statusId);
         const endedAt=l.endedAt?.toDate?.();
+        const cappedMin = calcCappedDuration(l);
+        const closeStr = (window._closeTimeMap||{})[l.branchName]||'23:00';
+        const durLabel = cappedMin + "דק'";
         return `<tr>
           <td><strong>${l.branchName}</strong></td>
           <td><span class="badge" style="background:${st.color}22;color:${st.color}">${st.label}</span></td>
           <td style="color:var(--text2)">${l.note||'—'}</td>
           <td>${window._fmtTime(l.startedAt)}</td>
-          <td>${endedAt?window._fmtTime(l.endedAt):'<span style="color:#e53935">טרם נסגר</span>'}</td>
-          <td><strong>${l.durationMinutes!=null?l.durationMinutes+"דק'":'טרם נסגר'}</strong></td>
+          <td>${endedAt?window._fmtTime(l.endedAt):'<span style="color:#e53935">פעיל (סגירה: '+closeStr+')</span>'}</td>
+          <td><strong>${durLabel}</strong></td>
         </tr>`;
       }).join('')
     : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">אין נתונים</td></tr>';
 }
 function exportCSV() {
   const header="סניף,סטטוס,הערה,כניסה לסטטוס,חזרה לשגרה,משך (דק')\n";
-  const rows=window._state.logs.map(l=>`${l.branchName},${window._statusById(l.statusId).label},${l.note||''},${window._fmtTime(l.startedAt)},${l.endedAt?window._fmtTime(l.endedAt):'טרם נסגר'},${l.durationMinutes||0}`).join('\n');
+  const rows=window._state.logs.map(l=>`${l.branchName},${window._statusById(l.statusId).label},${l.note||''},${window._fmtTime(l.startedAt)},${l.endedAt?window._fmtTime(l.endedAt):'פעיל'},${calcCappedDuration(l)}`).join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(header+rows);
   a.download='report_'+new Date().toLocaleDateString('he-IL').replace(/\./g,'-')+'.csv';
@@ -1549,14 +1667,19 @@ function exportCSV() {
 function renderSettings() {
   const {branches,statuses}=window._state;
   document.getElementById('settings-branches-list').innerHTML=branches.length
-    ? branches.map(b=>`<div class="list-item">
-        <span style="font-weight:500;color:${b.isFranchise?'#0D47A1':'var(--text)'}">${b.name}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <select onchange="window._db.updateBranchType('${b.id}',this.value==='franchise')"
+    ? branches.map(b=>`<div class="list-item" style="flex-wrap:wrap;gap:6px;padding:10px 0">
+        <span style="font-weight:500;color:${b.isFranchise?'#0D47A1':'var(--text)'};flex:1;min-width:100px">${b.name}</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <select onchange="dbUpdateBranchType('${b.id}',this.value==='franchise')"
             style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;background:var(--surface);color:var(--text)">
             <option value="owned" ${!b.isFranchise?'selected':''}>בעלות</option>
             <option value="franchise" ${b.isFranchise?'selected':''}>זכיין</option>
           </select>
+          <label style="font-size:11px;color:var(--text2);white-space:nowrap">סגירה:
+            <input type="time" value="${b.closeTime||'23:00'}"
+              onchange="dbUpdateBranchCloseTime('${b.id}',this.value)"
+              style="padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;background:var(--surface);color:var(--text);width:80px">
+          </label>
           <button class="btn btn-sm btn-danger" onclick="deleteBranchDef('${b.id}','${b.name}')">מחק</button>
         </div>
       </div>`).join('')
@@ -1650,6 +1773,16 @@ function mobileNav(page) {
 // Update mobile badge alongside desktop badge
 const _origUpdateBadge = typeof updateTasksBadge !== 'undefined' ? updateTasksBadge : null;
 
+// Safety wrappers for settings — callable from onchange even before _db is ready
+function dbUpdateBranchType(id, isFranchise) {
+  if(!window._db){ console.error('DB not ready'); return; }
+  window._db.updateBranchType(id, isFranchise);
+}
+function dbUpdateBranchCloseTime(id, closeTime) {
+  if(!window._db){ console.error('DB not ready'); return; }
+  window._db.updateBranchCloseTime(id, closeTime);
+}
+
 function toggleCollapse() {
   const page = document.getElementById('page-dashboard');
   const content = document.getElementById('dash-content');
@@ -1658,6 +1791,27 @@ function toggleCollapse() {
   content.classList.toggle('content-compact', isCompact);
   // Flip arrow: up = expanded, down = collapsed
   icon.setAttribute('points', isCompact ? '6 9 12 15 18 9' : '18 15 12 9 6 15');
+}
+
+async function testDBConnection() {
+  const btn = document.getElementById('db-test-btn');
+  const res = document.getElementById('db-test-result');
+  btn.disabled = true; btn.textContent = '⏳ בודק...'; res.textContent = '';
+  try {
+    if(!window._db) throw new Error('window._db לא מוגדר — Firebase לא נטען');
+    // Try a real write test — write then delete a temp doc
+    const { addDoc, deleteDoc, collection, getFirestore } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const testCol = collection(getFirestore(), '_connection_test');
+    const ref = await addDoc(testCol, { ts: Date.now() });
+    await deleteDoc(ref);
+    res.textContent = '✅ חיבור תקין — קריאה וכתיבה עובדים';
+    res.style.color = '#2E7D32';
+  } catch(e) {
+    res.textContent = '❌ ' + e.message;
+    res.style.color = '#b71c1c';
+    console.error('DB test failed:', e);
+  }
+  btn.textContent = '🔌 בדוק חיבור ל-Firebase'; btn.disabled = false;
 }
 
 function saveWASettings() {
@@ -1683,7 +1837,8 @@ function tickTimers() {
     const ms = getElapsedMs(b.statusChangedAt);
     const u = urgencyStyle(b.statusChangedAt);
     const addedTime = fmtAddedTime(b.statusChangedAt);
-    const elapsedStr = window._elapsed(b.statusChangedAt);
+    const ct = (window._closeTimeMap||{})[b.branchName] || '23:00';
+    const elapsedStr = b.isPermanent ? fmtAddedTime(b.statusChangedAt) : calcBranchElapsed(b, ct);
 
     // עדכון תצוגת טבלה
     const cell = document.getElementById('wt-cell-'+b.id);
@@ -1825,10 +1980,10 @@ function renderAnalytics() {
   logs.forEach(l => {
     if(!byBranch[l.branchName]) byBranch[l.branchName] = { count:0, minutes:0, byStatus:{} };
     byBranch[l.branchName].count++;
-    byBranch[l.branchName].minutes += l.durationMinutes||0;
+    byBranch[l.branchName].minutes += calcCappedDuration(l);
     if(!byBranch[l.branchName].byStatus[l.statusId]) byBranch[l.branchName].byStatus[l.statusId]={count:0,minutes:0,events:[]};
     byBranch[l.branchName].byStatus[l.statusId].count++;
-    byBranch[l.branchName].byStatus[l.statusId].minutes += l.durationMinutes||0;
+    byBranch[l.branchName].byStatus[l.statusId].minutes += calcCappedDuration(l);
     byBranch[l.branchName].byStatus[l.statusId].events.push(l);
   });
   const top10 = Object.entries(byBranch).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
@@ -1839,10 +1994,10 @@ function renderAnalytics() {
   logs.forEach(l => {
     if(!bySt[l.statusId]) bySt[l.statusId] = { count:0, minutes:0, branches:{} };
     bySt[l.statusId].count++;
-    bySt[l.statusId].minutes += l.durationMinutes||0;
+    bySt[l.statusId].minutes += calcCappedDuration(l);
     if(!bySt[l.statusId].branches[l.branchName]) bySt[l.statusId].branches[l.branchName]={count:0,minutes:0,events:[]};
     bySt[l.statusId].branches[l.branchName].count++;
-    bySt[l.statusId].branches[l.branchName].minutes += l.durationMinutes||0;
+    bySt[l.statusId].branches[l.branchName].minutes += calcCappedDuration(l);
     bySt[l.statusId].branches[l.branchName].events.push(l);
   });
   const topSt = Object.entries(bySt).sort((a,b)=>b[1].count-a[1].count);
