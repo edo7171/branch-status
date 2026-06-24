@@ -417,6 +417,10 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       <span class="nav-item-label">משימות <span class="tasks-badge hidden" id="nav-tasks-badge"></span></span>
     </button>
+    <button class="nav-item" onclick="showPage('scheduled')" id="nav-scheduled">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-item-label">מתוזמנות</span>
+    </button>
     <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       <span class="nav-item-label">הגדרות</span>
@@ -515,6 +519,23 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
       <button class="tfbtn" onclick="setTaskFilter('high',this)">⚡ דחוף</button>
     </div>
     <div id="tasks-list"></div>
+  </div>
+</div>
+
+<!-- SCHEDULED -->
+<div id="page-scheduled" class="hidden">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn" onclick="openSidebar()" style="padding:6px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div><div class="topbar-title">הודעות מתוזמנות</div><div class="topbar-sub">ניהול סטטוסים קבועים עם תזמון</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="openAddBranchModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      הוסף מתוזמן
+    </button>
+  </div>
+  <div class="content" id="scheduled-content">
+    <div class="empty-state"><p>אין הודעות מתוזמנות</p></div>
   </div>
 </div>
 
@@ -761,6 +782,15 @@ input[type=color]{width:34px;height:28px;border:1px solid var(--border);border-r
       <button class="type-btn perm" id="up-type-btn-perm" onclick="setUpdateType('permanent')">📌 קבוע</button>
     </div>
   </div>
+  <div id="schedule-section-update" class="hidden">
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label style="font-size:12px;font-weight:500;color:var(--text2)">תזמונים</label>
+        <button class="btn btn-sm btn-primary" onclick="addScheduleRowUpdate()">+ הוסף תזמון</button>
+      </div>
+      <div id="schedule-rows-update"></div>
+    </div>
+  </div>
   <div class="modal-footer">
     <button class="btn" onclick="closeModal('modal-update')">ביטול</button>
     <button class="btn btn-primary" onclick="confirmUpdate()">עדכן</button>
@@ -922,8 +952,11 @@ function setupListeners() {
 
   onSnapshot(collection(db,'active_events'), snap => {
     window._state.active = snap.docs.map(d=>({id:d.id,...d.data()}));
+    checkScheduledStatuses(); // always run BEFORE render to hide/show correctly
     renderDashboard();
-    document.getElementById('dash-sub').textContent = 'עדכון חי · ' + new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    renderScheduledPage();
+    const dashSub = document.getElementById('dash-sub');
+    if(dashSub) dashSub.textContent = 'עדכון חי · ' + new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
   });
 
   onSnapshot(query(collection(db,'status_logs'),orderBy('startedAt','desc')), snap => {
@@ -979,7 +1012,7 @@ window._db = {
       await addDoc(logsCol, { eventId:ref.id, branchName, statusId, note, isPermanent:!!isPermanent, startedAt:now, endedAt:null });
     }
   },
-  async updateActive(id, statusId, note, isPermanent) {
+  async updateActive(id, statusId, note, isPermanent, schedules) {
     const nowTs = Timestamp.now();
     const nowServer = serverTimestamp();
     const logsSnap = await getDocs(query(logsCol));
@@ -989,7 +1022,9 @@ window._db = {
       const dur = Math.max(0, Math.round((nowTs.toMillis()-startMs)/60000));
       await updateDoc(doc(db,'status_logs',openLog.id), { endedAt: nowServer, durationMinutes: dur });
     }
-    await updateDoc(doc(db,'active_events',id), { currentStatus:statusId, note, isPermanent:!!isPermanent, statusChangedAt:nowServer });
+    const updateData = { currentStatus:statusId, note, isPermanent:!!isPermanent, statusChangedAt:nowServer };
+    if(schedules !== undefined) updateData.schedules = schedules;
+    await updateDoc(doc(db,'active_events',id), updateData);
     const ev = window._state.active.find(a=>a.id===id);
     await addDoc(logsCol, { eventId:id, branchName:ev?.branchName||'', statusId, note, isPermanent:!!isPermanent, startedAt:nowServer, endedAt:null });
   },
@@ -1032,6 +1067,9 @@ window._db = {
   },
   async updateTask(id, text, priority, due) {
     await updateDoc(doc(db,'tasks',id), { text, priority, due:due||'', updatedAt:serverTimestamp() });
+  },
+  async updateEventSchedules(id, schedules) {
+    await updateDoc(doc(db,'active_events',id), { schedules });
   },
   async toggleTask(id, done) {
     await updateDoc(doc(db,'tasks',id), { done, updatedAt:serverTimestamp() });
@@ -1106,7 +1144,7 @@ let currentView = 'table';
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 
 function showPage(name) {
-  ['dashboard','reports','settings','analytics','tasks'].forEach(p=>{
+  ['dashboard','reports','settings','analytics','tasks','scheduled'].forEach(p=>{
     document.getElementById('page-'+p).classList.toggle('hidden',p!==name);
     const navEl = document.getElementById('nav-'+p);
     if(navEl) navEl.classList.toggle('active',p===name);
@@ -1115,6 +1153,7 @@ function showPage(name) {
   if(name==='settings') renderSettings();
   if(name==='analytics') renderAnalytics();
   if(name==='tasks') renderTasks();
+  if(name==='scheduled') renderScheduledPage();
   closeSidebar();
 }
 
@@ -1222,10 +1261,39 @@ function confirmAddBranch() {
 // ─── Update Status ───
 let updateType = 'temporary';
 
+let pendingSchedulesUpdate = [];
+
 function setUpdateType(t) {
   updateType = t;
   document.getElementById('up-type-btn-temp').classList.toggle('active', t==='temporary');
   document.getElementById('up-type-btn-perm').classList.toggle('active', t==='permanent');
+  const sec = document.getElementById('schedule-section-update');
+  if(sec) sec.classList.toggle('hidden', t!=='permanent');
+}
+
+function addScheduleRowUpdate() {
+  window._schedMode = 'update';
+  window._editingScheduleEventId = null;
+  editingSchedIdx = null;
+  document.querySelectorAll('#sched-days-picker .day-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('sched-from').value = '18:00';
+  document.getElementById('sched-to').value = '23:00';
+  openModal('modal-schedule');
+}
+
+function renderUpdateScheduleRows() {
+  const el = document.getElementById('schedule-rows-update');
+  if(!el) return;
+  if(!pendingSchedulesUpdate.length) {
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px">אין תזמונים</div>';
+    return;
+  }
+  el.innerHTML = pendingSchedulesUpdate.map((s,i)=>`
+    <div class="schedule-row">
+      <div class="days-display">${s.days.map(d=>DAY_NAMES[d]).join(' ')}</div>
+      <span style="font-size:13px;font-weight:600">${s.from} – ${s.to}</span>
+      <button class="btn btn-sm btn-danger" onclick="pendingSchedulesUpdate.splice(${i},1);renderUpdateScheduleRows()">✕</button>
+    </div>`).join('');
 }
 
 function openUpdateModal(id) {
@@ -1237,13 +1305,17 @@ function openUpdateModal(id) {
   updateType = b.isPermanent ? 'permanent' : 'temporary';
   setUpdateType(updateType);
   buildStatusPicker('up-status-picker',selectedStatusIdUpdate,'pickerSelectUpdate');
+  // Load existing schedules for editing
+  pendingSchedulesUpdate = [...(b.schedules||[])];
+  renderUpdateScheduleRows();
   openModal('modal-update');
 }
 function confirmUpdate() {
   if(!editingId){closeModal('modal-update');return;}
   const note=document.getElementById('update-note').value.trim();
   const isPermanent = updateType === 'permanent';
-  window._db.updateActive(editingId,selectedStatusIdUpdate,note,isPermanent);
+  const schedules = isPermanent ? [...pendingSchedulesUpdate] : [];
+  window._db.updateActive(editingId,selectedStatusIdUpdate,note,isPermanent,schedules);
   closeModal('modal-update');
 }
 
@@ -2535,6 +2607,148 @@ const _origRenderWarroom = renderWarroomTable;
 //  we filter before passing to the table)
 
 // ── Hook into confirmAddBranch to save schedules ──
+
+
+// ════════════════════════════════
+// ──── SCHEDULED PAGE ────
+// ════════════════════════════════
+function renderScheduledPage() {
+  const el = document.getElementById('scheduled-content');
+  if(!el) return;
+
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+
+  function isActiveNow(schedules) {
+    if(!schedules?.length) return false;
+    return schedules.some(s => {
+      if(!s.days.includes(dayOfWeek)) return false;
+      const [fh,fm] = s.from.split(':').map(Number);
+      const [th,tm] = s.to.split(':').map(Number);
+      const fromMin=fh*60+fm, toMin=th*60+tm;
+      if(toMin < fromMin) return nowMin >= fromMin || nowMin < toMin;
+      return nowMin >= fromMin && nowMin < toMin;
+    });
+  }
+
+  // All permanent events (active + could-be-scheduled)
+  const scheduled = (window._state.active||[]).filter(b => b.isPermanent && b.schedules?.length);
+
+  if(!scheduled.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:44px;height:44px;opacity:.2;display:block;margin:0 auto 14px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <p>אין הודעות מתוזמנות</p>
+      <small>הוסף סניף עם סטטוס "קבוע" וסמן תזמון</small>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = scheduled.map(b => {
+    const st = window._statusById(b.currentStatus);
+    const active = isActiveNow(b.schedules);
+    const activeLabel = active
+      ? '<span style="background:#E8F5E9;color:#1B5E20;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">🟢 פעיל עכשיו</span>'
+      : '<span style="background:#FFEBEE;color:#B71C1C;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">⛔ לא פעיל</span>';
+
+    const schedRows = (b.schedules||[]).map((s,si) => {
+      const dayLabels = s.days.map(d=>['א','ב','ג','ד','ה','ו','ש'][d]).join(' ');
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--surface2);border-radius:6px;margin-bottom:4px;font-size:13px">
+        <span style="font-weight:600;min-width:70px">${dayLabels}</span>
+        <span>${s.from} – ${s.to}</span>
+        <button class="btn btn-sm" onclick="editScheduleOnEvent('${b.id}',${si})" style="margin-right:auto">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="removeScheduleOnEvent('${b.id}',${si})">✕</button>
+      </div>`;
+    }).join('');
+
+    return `<div class="branch-card" style="margin-bottom:12px;border-right:4px solid ${st.color}">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:16px;font-weight:700;flex:1">${b.branchName}</span>
+        <span class="badge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}44">${st.label}</span>
+        ${activeLabel}
+      </div>
+      <div style="margin-bottom:10px">${schedRows}</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-primary" onclick="addScheduleToEvent('${b.id}')">+ הוסף תזמון</button>
+        <button class="btn btn-sm btn-success" onclick="openRestoreModal('${b.id}')">✓ הורד מלוח</button>
+        <button class="btn btn-sm" onclick="openUpdateModal('${b.id}')">עדכן סטטוס</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Add schedule to existing event
+function addScheduleToEvent(eventId) {
+  editingSchedIdx = null;
+  window._editingScheduleEventId = eventId;
+  document.querySelectorAll('#sched-days-picker .day-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('sched-from').value = '18:00';
+  document.getElementById('sched-to').value = '23:00';
+  // Override saveScheduleRow for this case
+  window._schedMode = 'event';
+  openModal('modal-schedule');
+}
+
+// Edit specific schedule on existing event
+function editScheduleOnEvent(eventId, idx) {
+  const ev = window._state.active.find(e=>e.id===eventId);
+  if(!ev) return;
+  const s = ev.schedules[idx];
+  window._editingScheduleEventId = eventId;
+  window._editingScheduleIdx = idx;
+  document.querySelectorAll('#sched-days-picker .day-btn').forEach(b=>{
+    b.classList.toggle('selected', s.days.includes(parseInt(b.dataset.d)));
+  });
+  document.getElementById('sched-from').value = s.from;
+  document.getElementById('sched-to').value = s.to;
+  window._schedMode = 'event';
+  openModal('modal-schedule');
+}
+
+// Remove schedule from existing event
+async function removeScheduleOnEvent(eventId, idx) {
+  const ev = window._state.active.find(e=>e.id===eventId);
+  if(!ev) return;
+  const newSchedules = [...(ev.schedules||[])];
+  newSchedules.splice(idx,1);
+  await window._db.updateEventSchedules(eventId, newSchedules);
+}
+
+// Override saveScheduleRow to handle both modes
+const _origSaveScheduleRow = saveScheduleRow;
+function saveScheduleRow() {
+  const days = [...document.querySelectorAll('#sched-days-picker .day-btn.selected')].map(b=>parseInt(b.dataset.d));
+  if(!days.length){ alert('בחר לפחות יום אחד'); return; }
+  const from = document.getElementById('sched-from').value;
+  const to   = document.getElementById('sched-to').value;
+  if(!from||!to){ alert('בחר שעות'); return; }
+  const sched = { days, from, to };
+
+  if(window._schedMode === 'update') {
+    pendingSchedulesUpdate.push(sched);
+    window._schedMode = null;
+    closeModal('modal-schedule');
+    renderUpdateScheduleRows();
+  } else if(window._schedMode === 'event' && window._editingScheduleEventId) {
+    const ev = window._state.active.find(e=>e.id===window._editingScheduleEventId);
+    const newSchedules = [...(ev?.schedules||[])];
+    if(window._editingScheduleIdx !== undefined && window._editingScheduleIdx !== null)
+      newSchedules[window._editingScheduleIdx] = sched;
+    else
+      newSchedules.push(sched);
+    window._db.updateEventSchedules(window._editingScheduleEventId, newSchedules);
+    window._schedMode = null;
+    window._editingScheduleEventId = null;
+    window._editingScheduleIdx = null;
+    closeModal('modal-schedule');
+  } else {
+    // original behavior - add to pendingSchedules
+    if(editingSchedIdx !== null) pendingSchedules[editingSchedIdx] = sched;
+    else pendingSchedules.push(sched);
+    closeModal('modal-schedule');
+    renderScheduleRows();
+  }
+}
 
 </script>
 </body>
